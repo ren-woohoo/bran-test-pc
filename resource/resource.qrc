@@ -1,0 +1,27 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/background/background_debug.png</file>
+        <file>images/button/button1.png</file>
+        <file>images/button/button1_press.png</file>
+        <file>images/button/button2.png</file>
+        <file>images/button/button2_press.png</file>
+        <file>images/button/button3.png</file>
+        <file>images/button/button3_press.png</file>
+        <file>images/button/button4.png</file>
+        <file>images/button/button4_press.png</file>
+        <file>images/button/refresh.png</file>
+        <file>images/button/refresh_press.png</file>
+        <file>images/logo/logo.ico</file>
+        <file>images/logo/logo.png</file>
+        <file>images/logo/logoLarge.png</file>
+        <file>images/logo/logoSmall.png</file>
+        <file>images/tools/arrow.png</file>
+        <file>images/tools/arrow_press.png</file>
+        <file>images/tools/box.png</file>
+        <file>images/tools/box_selected.png</file>
+        <file>images/tools/inputLarge.png</file>
+        <file>images/tools/inputSmall.png</file>
+        <file>images/tools/scrollBar.png</file>
+        <file>images/tools/scrollBar_press.png</file>
+    </qresource>
+</RCC>
