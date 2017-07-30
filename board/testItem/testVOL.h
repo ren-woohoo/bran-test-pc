@@ -1,7 +1,7 @@
 #ifndef TESTVOL_H
 #define TESTVOL_H
 
-#include "system/sysData.h"
+#include "control/sysData.h"
 #include "baseTestItem.h"
 
 class TestVOL : public BaseTestItem
@@ -12,12 +12,13 @@ public:
     void start_test();
 
 signals:
+    void signal_update_infoVOL(InfoVol);
 
 private slots:
-    void slot_getVoltage_feedback(QString);
-    void slot_getVoltage_timeout();
-
+    void slot_getVoltage_feedback(QString,QString);
     void slot_change_refDatas(RefDatas);
+
+    void slot_serial_timeout();
 
 private:
     bool analyse_data(InfoVol);
@@ -26,12 +27,13 @@ private:
     void connect_init();
 
 private:
-    InfoVol branData;
+    InfoVol infoVol;
     RefDatas refDatas;
     QTimer *timer;
-    int numFailed;
 
     SysData *sysData;
+
+    bool isFailed;
 };
 
 #endif // TESTVOL_H

@@ -1,7 +1,9 @@
 #ifndef GLOBALDEFINE_H
 #define GLOBALDEFINE_H
 
-#define     SYS_VERSION                 "1.0"
+#include <QString>
+
+#define     VERSION                 "20"
 
 #define     URL_SERVER                  "http://manufacture.cleargrass.com"
 #define     REQUEST_LOGIN               "/api/login"
@@ -108,7 +110,6 @@ typedef struct infoMiio
         did = "";
         key = "";
     }
-
     bool isEmpty()
     {
         if((mac == "") || (did == "") || (key == ""))
@@ -119,6 +120,51 @@ typedef struct infoMiio
     }
 
 }InfoMIIO;
+
+typedef struct infoFixture
+{
+    QString port;
+    QString id;
+    QString deviceADB;
+    QString deviceSN;
+
+    void clear()
+    {
+        port.clear();
+        id.clear();
+        deviceADB.clear();
+        deviceSN.clear();
+    }
+    bool isEmpty()
+    {
+        return port.isEmpty();
+    }
+    bool isValid()
+    {
+        if(!port.isEmpty() && !id.isEmpty())
+        {
+            return true;
+        }
+        return false;
+    }
+    bool isWaitMatch()
+    {
+        if(!port.isEmpty() && !id.isEmpty() && !deviceSN.isEmpty() && deviceADB.isEmpty())
+        {
+            return true;
+        }
+        return false;
+    }
+    bool isReady()
+    {
+        if(deviceADB.isEmpty())
+        {
+            return false;
+        }
+        return true;
+    }
+}InfoFixture;
+
 
 typedef struct infoDevice
 {
@@ -204,22 +250,53 @@ typedef struct infoResult
     bool vol;
     bool miio;
 
+    infoResult()
+    {
+        clear();
+    }
+    void clear()
+    {
+        cpu = false;
+        rtc = false;
+        gravity = false;
+        wifi = false;
+        usb = false;
+        vol = false;
+        miio = false;
+    }
+    bool isPassed()
+    {
+        if(cpu && rtc && gravity && wifi && usb && vol && miio)
+        {
+            return true;
+        }
+        return false;
+    }
 }InfoResult;
 
 typedef struct infoTest
 {
-    QString sn;
-    QString fixture;
+    InfoFixture infoFixture;
     InfoMIIO infoMIIO;
     InfoVol infoVol;
     InfoResult infoResult;
     infoTest()
     {
+        infoFixture.clear();
+        infoMIIO.clear();
+        infoVol.clear();
+        infoResult.clear();
+    }
+    void test_init()
+    {
+        infoResult.clear();
         infoMIIO.clear();
         infoVol.clear();
     }
     void clear()
     {
+        infoFixture.clear();
+        infoResult.clear();
         infoMIIO.clear();
         infoVol.clear();
     }

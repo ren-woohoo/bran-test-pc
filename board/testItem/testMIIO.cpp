@@ -22,7 +22,7 @@ TestMIIO::TestMIIO(DeviceItem *deviceItem, SerialItem *serialItem)
 *******************************************************************************/
 void TestMIIO::start_test()
 {
-    debugInfo = "START MIIO DEVICE CONF ...\n";
+    debugInfo = "START TEST MIIO ...\n";
     emit signal_get_infoMIIO(deviceSN);
 }
 
@@ -37,41 +37,66 @@ void TestMIIO::slot_getInfoMIIO_success(InfoMIIO infoMIIO)
 {
     if(infoMIIO.isEmpty())
     {
-        debugInfo.append("Get new MIIO info is NULL!!!\n");
-        debugInfo.append("END MIIO DEVICE CONF ------ FAILED!!!");
+        debugInfo.append("MIIO INFO IS EMPTY!!!\n");
+        debugInfo.append("END MIIO DEVICE CONF --- FAIL!!!");
         emit signal_test_result(-1, debugInfo);
         return;
     }
+    debugInfo.append(QString("DID:  %1\n").arg(infoMIIO.did));
+    debugInfo.append(QString("MAC:  %1\n").arg(infoMIIO.mac));
+    debugInfo.append(QString("KEY:  %1\n").arg(infoMIIO.key));
 
-    debugInfo.append(QString("DID:%1\n").arg(infoMIIO.did));
-    debugInfo.append(QString("MAC:%1\n").arg(infoMIIO.mac));
-    debugInfo.append(QString("KEY:%1\n").arg(infoMIIO.key));
-
-    QString cmd1 = QString("push %1").arg(COMMAND_DEVICE_1);
-    debugInfo.append(QString("CMD1: %1\n").arg(cmd1));
+    QString cmd1 = QString("sed -i \"/did=/c did=%1\" %2").arg(infoMIIO.did).arg("/usr/bin/qtapp/etc/device.conf");
     QString result1 = deviceItem->excute_cmd(cmd1);
+    debugInfo.append(QString("CMD1: %1\n").arg(cmd1));
     debugInfo.append(QString("RESULT1: %1\n").arg(result1));
 
-    QString cmd2 = QString("shell %1").arg(COMMAND_DEVICE_2);
-    debugInfo.append(QString("CMD2: %1\n").arg(cmd2));
+    QString cmd2 = QString("sed -i \"/mac=/c mac=%1\" %2").arg(infoMIIO.mac).arg("/usr/bin/qtapp/etc/device.conf");
     QString result2 = deviceItem->excute_cmd(cmd2);
+    debugInfo.append(QString("CMD2: %1\n").arg(cmd2));
     debugInfo.append(QString("RESULT2: %1\n").arg(result2));
 
-    QString cmd3 = QString("shell %1 %2 %3 %4").arg(COMMAND_DEVICE_3).arg(infoMIIO.did).arg(infoMIIO.key).arg(infoMIIO.mac);
-    debugInfo.append(QString("CMD3: %1\n").arg(cmd3));
+    QString cmd3 = QString("sed -i \"/key=/c key=%1\" %2").arg(infoMIIO.key).arg("/usr/bin/qtapp/etc/device.conf");
     QString result3 = deviceItem->excute_cmd(cmd3);
+    debugInfo.append(QString("CMD3: %1\n").arg(cmd3));
     debugInfo.append(QString("RESULT3: %1\n").arg(result3));
-    if(result3.contains("START THE SHELL FOR DEVICE INIT") && result3.contains("SET MIIO SUCCESS"))
+
+    QString cmd4 = "cat /usr/bin/qtapp/etc/device.conf";
+    QString result4 = deviceItem->excute_cmd(cmd4);
+    debugInfo.append(QString("CMD4: %1\n").arg(cmd4));
+    debugInfo.append(QString("RESULT4: %1\n").arg(result4));
+    QStringList listFile = result4.split("\n");
+    QString did,mac,key;
+    for(int i = 0; i < listFile.length(); ++i)
     {
-        // 同步测试数据
-        debugInfo.append("END MIIO DEVICE CONF ------ SUCCESS!!!");
+        if(listFile.at(i).startsWith("did="))
+        {
+            did = listFile.at(i).split("=").at(1);
+            did = did.trimmed();
+        }
+        else if(listFile.at(i).startsWith("mac="))
+        {
+            mac = listFile.at(i).split("=").at(1);
+            mac = mac.trimmed();
+        }
+        else if(listFile.at(i).startsWith("key="))
+        {
+            key = listFile.at(i).split("=").at(1);
+            key = key.trimmed();
+        }
+    }
+    debugInfo.append(QString("DID1:\"%1\", DID2:\"%2\"\n").arg(infoMIIO.did).arg(did));
+    debugInfo.append(QString("MAC1:\"%1\", MAC2:\"%2\"\n").arg(infoMIIO.mac).arg(mac));
+    debugInfo.append(QString("KEY1:\"%1\", KEY3:\"%2\"\n").arg(infoMIIO.key).arg(key));
+    if((did == infoMIIO.did) && (mac == infoMIIO.mac) && (key == infoMIIO.key))
+    {
+        debugInfo.append("END TEST MIIO --- PASS!!!");
         emit signal_update_infoMIIO(infoMIIO);
-        qDebug()<<"--------------------------------------------------------------";
         emit signal_test_result(0, debugInfo);
     }
     else
     {
-        debugInfo.append("END MIIO DEVICE CONFIG ------ FAILED!!!");
+        debugInfo.append("END TEST MIIO --- FAIL!!!");
         emit signal_test_result(-1, debugInfo);
     }
 }
@@ -85,9 +110,9 @@ void TestMIIO::slot_getInfoMIIO_success(InfoMIIO infoMIIO)
 *******************************************************************************/
 void TestMIIO::slot_getInfoMIIO_failed(QString replyData)
 {
-    debugInfo.append(QString("replyData:%1\n").arg(replyData));
-    debugInfo.append("Get new MIIO info failed!!!\n");
-    debugInfo.append("END MIIO DEVICE CONF ------ FAILED!!!");
+    debugInfo.append("GET MIIO INFO FAILED!!!\n");
+    debugInfo.append(QString("SERVER REPLY: %1\n").arg(replyData));
+    debugInfo.append("END MIIO DEVICE CONF --- FAIL!!!");
     emit signal_test_result(-1, debugInfo);
 }
 

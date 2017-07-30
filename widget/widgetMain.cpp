@@ -41,10 +41,26 @@ WidgetMain::~WidgetMain()
 *******************************************************************************/
 void WidgetMain::data_init()
 {
-    sysUser       = SysUser::getInstance();
+    serverUser    = ServerUser::getInstance();
     deviceControl = DeviceControl::getInstance();
     serialControl = SerialControl::getInstance();
     hodorControl  = HodorControl::getInstance();
+
+    QFile file("./user.conf");
+    QString name = "";
+    if(file.exists() && file.size() > 0)
+    {
+        if(file.open(QIODevice::ReadOnly))
+        {
+            name = file.readAll();
+            file.close();
+        }
+    }
+    if(!name.isEmpty())
+    {
+        ui->edit_user->setText(name);
+        ui->edit_password->setFocus();
+    }
 }
 
 /*******************************************************************************
@@ -56,10 +72,10 @@ void WidgetMain::data_init()
 *******************************************************************************/
 void WidgetMain::connect_init()
 {
-    connect(this, SIGNAL(signal_user_login(QString,QString)), sysUser, SIGNAL(signal_user_login(QString,QString)));
-    connect(sysUser, SIGNAL(signal_login_result(int)), this, SLOT(slot_login_result(int)));
-    connect(this, SIGNAL(signal_user_modify(QString)), sysUser, SIGNAL(signal_user_modify(QString)));
-    connect(sysUser, SIGNAL(signal_modify_result(int)), this, SLOT(slot_modify_result(int)));
+    connect(this, SIGNAL(signal_user_login(QString,QString)), serverUser, SLOT(slot_user_login(QString,QString)));
+    connect(serverUser, SIGNAL(signal_login_result(int)), this, SLOT(slot_login_result(int)));
+    connect(this, SIGNAL(signal_user_modify(QString)), serverUser, SLOT(slot_user_modify(QString)));
+    connect(serverUser, SIGNAL(signal_modify_result(int)), this, SLOT(slot_modify_result(int)));
 
     connect(deviceControl, SIGNAL(signal_add_devices(QList<QString>)), widgetControl, SLOT(slot_add_devices(QList<QString>)));
     connect(deviceControl, SIGNAL(signal_delete_devices(QList<QString>)), widgetControl, SLOT(slot_delete_devices(QList<QString>)));
@@ -69,6 +85,8 @@ void WidgetMain::connect_init()
 
     connect(deviceControl, SIGNAL(signal_add_devices(QList<QString>)), hodorControl, SLOT(slot_add_devices(QList<QString>)));
     connect(deviceControl, SIGNAL(signal_delete_devices(QList<QString>)), hodorControl, SLOT(slot_delete_devices(QList<QString>)));
+
+    connect(this, SIGNAL(signal_close_ports()), widgetControl, SIGNAL(signal_close_ports()));
 }
 
 /*******************************************************************************
@@ -82,11 +100,11 @@ void WidgetMain::widget_init()
 {
 
 #ifdef TEST_MODE
-    ui->label_title->setText(QStringLiteral("Bran工装上位机(测试版V2.0)"));
-    ui->label_smallTitle->setText(QStringLiteral("测试版V2.0"));
+    ui->label_title->setText(QStringLiteral("Bran工装上位机(测试版V%1)").arg(VERSION));
+    ui->label_smallTitle->setText(QStringLiteral("测试版V%1").arg(VERSION));
 #else
-    ui->label_title->setText(QStringLiteral("Bran工装上位机(正式版V2.0)"));
-    ui->label_smallTitle->setText(QStringLiteral("正式版V2.0"));
+    ui->label_title->setText(QStringLiteral("Bran工装上位机(正式版V%1)").arg(VERSION));
+    ui->label_smallTitle->setText(QStringLiteral("正式版V%1").arg(VERSION));
 #endif
     widgetControl = new WidgetControl(ui->widget_test);
     widgetSetting = new WidgetSetting(ui->widget_setting);
@@ -113,6 +131,14 @@ void WidgetMain::on_button_login_clicked()
 
     QString user = ui->edit_user->text();
     QString password = ui->edit_password->text();
+
+    QFile file("./user.conf");
+    if(file.open(QIODevice::WriteOnly))
+    {
+        QTextStream in(&file);
+        in<<user;
+        file.close();
+    }
 
     // 发送登录信号
     emit signal_user_login(user,password);
@@ -253,6 +279,21 @@ void WidgetMain::on_button_backModify_clicked()
     ui->button_passwordModify->setEnabled(false);
 }
 
+void WidgetMain::keyPressEvent(QKeyEvent *event)
+{
+    if(event->key() == Qt::Key_Return)
+    {
+        if(ui->stackedWidget_main->currentIndex() == 0)
+        {
+            on_button_login_clicked();
+        }
+        else if(ui->stackedWidget_main->currentIndex() == 2)
+        {
+            on_button_passwordModify_clicked();
+        }
+    }
+}
+
 /*******************************************************************************
 * Function Name  :  on_button_pageModify_clicked
 * Description    :  跳转到修改密码页面
@@ -275,4 +316,16 @@ void WidgetMain::on_button_pageModify_clicked()
 void WidgetMain::slot_quit_program()
 {
     ui->stackedWidget_main->setCurrentWidget(ui->page_index);
+}
+
+/*******************************************************************************
+* Function Name  :  closeEvent
+* Description    :  关闭事件
+* Input          :  None
+* Output         :  None
+* Return         :  None
+*******************************************************************************/
+void WidgetMain::closeEvent(QCloseEvent *event)
+{
+    emit signal_close_ports();
 }

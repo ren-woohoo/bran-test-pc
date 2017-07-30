@@ -88,7 +88,6 @@ void SerialControl::slot_refresh_ports()
     {
         listPortCurrent.append(info.portName());
     }
-
     if(listPort == listPortCurrent)
     {
         return;
@@ -129,7 +128,6 @@ void SerialControl::slot_refresh_ports()
                 if(n == (listPortCurrent.length() - 1))
                 {
                     // 假如需要更新的
-
                     listPortDelete.append(listPort.at(m));
                 }
             }

@@ -32,6 +32,10 @@ void ServerHodor::slot_sync_testPassed(InfoDevice infoDevice,InfoHodor infoHodor
     request.setRawHeader("User-Session", session.toLatin1());
     request.setRawHeader("Timestamp", QString::number(QDateTime::currentDateTime().toTime_t()).toLatin1());
     request.setRawHeader("Encrypted", QString::number(QDateTime::currentDateTime().toTime_t()).toLatin1());
+    request.setRawHeader("Version", QString(VERSION).toLatin1());
+    request.setRawHeader("Api-Version", QString("1").toLatin1());
+    request.setRawHeader("Client", QString("pc").toLatin1());
+    request.setRawHeader("Package", QString("hodor").toLatin1());
 #ifdef TEST_MODE
     request.setRawHeader("test-db", "1");
 #endif
@@ -83,6 +87,10 @@ void ServerHodor::slot_sync_testFailed(InfoDevice infoDevice,InfoHodor infoHodor
     QString encrypted = networkManage->encrypted_string(timestamp);
     request.setRawHeader("Timestamp", timestamp.toLatin1());
     request.setRawHeader("Encrypted", encrypted.toLatin1());
+    request.setRawHeader("Version", QString(VERSION).toLatin1());
+    request.setRawHeader("Api-Version", QString("1").toLatin1());
+    request.setRawHeader("Client", QString("pc").toLatin1());
+    request.setRawHeader("Package", QString("hodor").toLatin1());
 #ifdef TEST_MODE
     request.setRawHeader("test-db", "1");
 #endif

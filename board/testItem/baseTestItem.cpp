@@ -4,6 +4,7 @@ BaseTestItem::BaseTestItem(DeviceItem* deviceItem, SerialItem *serialItem) : QOb
 {
     this->deviceItem = deviceItem;
     this->serialItem = serialItem;
+    connect(this, SIGNAL(signal_write_data(QString)), serialItem, SLOT(slot_write_data(QString)));
 }
 
 /*******************************************************************************

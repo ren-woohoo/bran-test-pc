@@ -13,7 +13,6 @@ WidgetSetting::WidgetSetting(QWidget *parent) :
     ui(new Ui::WidgetSetting)
 {
     ui->setupUi(this);
-    qRegisterMetaType<RefDatas>("RefDatas");
     data_init();
     widget_init();
     connect_init();

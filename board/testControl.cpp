@@ -11,9 +11,11 @@ TestControl::TestControl(QWidget *parent)
     : QThread()
 {
     qRegisterMetaType<InfoMIIO>("InfoMIIO");
+    qRegisterMetaType<InfoVol>("InfoVol");
     qRegisterMetaType<InfoTest>("InfoTest");
-
+    qRegisterMetaType<InfoFixture>("InfoFixture");
     widgetItem = new WidgetTestItem(parent);
+    widgetTest = new WidgetTest();
     data_init();
     connect_init();
     moveToThread(this);
@@ -29,7 +31,7 @@ TestControl::TestControl(QWidget *parent)
 void TestControl::data_init()
 {
     progress = 0;
-    isFailed = false;
+    testStage = IS_FREE;
 
     serverUser = ServerUser::getInstance();
 
@@ -43,7 +45,7 @@ void TestControl::data_init()
     serverSync->moveToThread(this);
     serverMIIO->moveToThread(this);
 
-    timerRetry = new QTimer(this);
+    timerRetry = new QTimer();
     timerRetry->setInterval(1000);
 
     testCPU = new TestCPU(deviceItem, serialItem);
@@ -53,6 +55,7 @@ void TestControl::data_init()
     testUSB = new TestUSB(deviceItem, serialItem);
     testVOL = new TestVOL(deviceItem, serialItem);
     testMIIO = new TestMIIO(deviceItem, serialItem);
+    testSYNC = new TestSYNC(deviceItem, serialItem);
 
     testCPU->moveToThread(this);
     testRTC->moveToThread(this);
@@ -61,6 +64,7 @@ void TestControl::data_init()
     testUSB->moveToThread(this);
     testVOL->moveToThread(this);
     testMIIO->moveToThread(this);
+    testSYNC->moveToThread(this);
 }
 
 /*******************************************************************************
@@ -75,9 +79,9 @@ void TestControl::connect_init()
     connect(serverUser, SIGNAL(signal_update_user(QString,QString)), serverMIIO, SLOT(slot_update_user(QString,QString)));
     connect(serverUser, SIGNAL(signal_update_user(QString,QString)), serverSync, SLOT(slot_update_user(QString,QString)));
 
-    connect(serialItem, SIGNAL(signal_openPort_result(int)), this ,SLOT(slot_openPort_result(int)));
-    connect(serialItem, SIGNAL(signal_getDevice_feedback(QString)), this, SLOT(slot_getDevice_feedback(QString)));
-    connect(serialItem, SIGNAL(signal_getFixture_feedback(QString)), this, SLOT(slot_getFixture_feedback(QString)));
+    connect(this, SIGNAL(signal_write_data(QString)), serialItem, SLOT(slot_write_data(QString)));
+    connect(serialItem, SIGNAL(signal_getDevice_feedback(QString,QString)), this, SLOT(slot_getDevice_feedback(QString,QString)));
+    connect(serialItem, SIGNAL(signal_getFixture_feedback(QString,QString)), this, SLOT(slot_getFixture_feedback(QString,QString)));
 
     connect(testCPU, SIGNAL(signal_test_result(int,QString)), this, SLOT(slot_testCPU_result(int,QString)));
     connect(testRTC, SIGNAL(signal_test_result(int,QString)), this, SLOT(slot_testRTC_result(int,QString)));
@@ -86,41 +90,116 @@ void TestControl::connect_init()
     connect(testUSB, SIGNAL(signal_test_result(int,QString)), this, SLOT(slot_testUSB_result(int,QString)));
     connect(testVOL, SIGNAL(signal_test_result(int,QString)), this, SLOT(slot_testVOL_result(int,QString)));
     connect(testMIIO, SIGNAL(signal_test_result(int,QString)), this, SLOT(slot_testMIIO_result(int,QString)));
+    connect(testSYNC, SIGNAL(signal_test_result(int,QString)), this, SLOT(slot_testSYNC_result(int,QString)));
+
+    connect(this, SIGNAL(signal_testCPU_result(int,QString)), widgetTest, SLOT(slot_testCPU_result(int,QString)));
+    connect(this, SIGNAL(signal_testRTC_result(int,QString)), widgetTest, SLOT(slot_testRTC_result(int,QString)));
+    connect(this, SIGNAL(signal_testGravity_result(int,QString)), widgetTest, SLOT(slot_testGravity_result(int,QString)));
+    connect(this, SIGNAL(signal_testWiFi_result(int,QString)), widgetTest, SLOT(slot_testWiFi_result(int,QString)));
+    connect(this, SIGNAL(signal_testUSB_result(int,QString)), widgetTest, SLOT(slot_testUSB_result(int,QString)));
+    connect(this, SIGNAL(signal_testVOL_result(int,QString)), widgetTest, SLOT(slot_testVOL_result(int,QString)));
+    connect(this, SIGNAL(signal_testMIIO_result(int,QString)), widgetTest, SLOT(slot_testMIIO_result(int,QString)));
+    connect(this, SIGNAL(signal_testSYNC_result(int,QString)), widgetTest, SLOT(slot_testSYNC_result(int,QString)));
+
+    connect(testSYNC, SIGNAL(signal_sync_testPassed(InfoTest)), serverSync, SLOT(slot_sync_testPassed(InfoTest)));
+    connect(testSYNC, SIGNAL(signal_sync_testFailed(InfoTest)), serverSync, SLOT(slot_sync_testFailed(InfoTest)));
+    connect(serverSync, SIGNAL(signal_syncTest_success(QString)), testSYNC, SLOT(slot_syncTest_success(QString)));
+    connect(serverSync, SIGNAL(signal_syncTest_failed(QString)), testSYNC, SLOT(slot_syncTest_failed(QString)));
+
+    connect(testVOL, SIGNAL(signal_update_infoVOL(InfoVol)), this, SLOT(slot_update_infoVOL(InfoVol)));
     connect(testMIIO, SIGNAL(signal_update_infoMIIO(InfoMIIO)), this, SLOT(slot_update_infoMIIO(InfoMIIO)));
-
-    connect(this, SIGNAL(signal_sync_testPassed(InfoTest)), serverSync, SLOT(slot_sync_testPassed(InfoTest)));
-    connect(this, SIGNAL(signal_sync_testFailed(InfoTest)), serverSync, SLOT(slot_sync_testFailed(InfoTest)));
-    connect(serverSync, SIGNAL(signal_syncTest_success()), this, SLOT(slot_syncTest_success()));
-    connect(serverSync, SIGNAL(signal_syncTest_failed(QString)), this, SLOT(slot_syncTest_failed(QString)));
-
 
     connect(testMIIO, SIGNAL(signal_get_infoMIIO(QString)), serverMIIO, SLOT(slot_fetch_mac(QString)));
     connect(serverMIIO, SIGNAL(signal_fetch_success(InfoMIIO)), testMIIO, SLOT(slot_getInfoMIIO_success(InfoMIIO)));
     connect(serverMIIO, SIGNAL(signal_fetch_failed(QString)), testMIIO, SLOT(slot_getInfoMIIO_failed(QString)));
+
+    connect(this, SIGNAL(signal_test_init()), widgetItem, SLOT(slot_test_init()));
+    connect(this, SIGNAL(signal_test_init()), widgetTest, SLOT(slot_test_init()));
+    connect(this, SIGNAL(signal_update_infoFixture(InfoFixture)), widgetItem, SLOT(slot_update_infoFixture(InfoFixture)));
+    connect(this, SIGNAL(signal_update_progress(int)), widgetItem, SLOT(slot_update_progress(int)));
+    connect(this, SIGNAL(signal_test_result(int)), widgetItem, SLOT(slot_test_result(int)));
+
+    connect(widgetItem, SIGNAL(signal_show_widgetTest()), widgetTest, SLOT(show()));
+    connect(widgetItem, SIGNAL(signal_show_widgetTest()), widgetTest, SLOT(raise()));
+    connect(timerRetry, SIGNAL(timeout()), this, SLOT(slot_retry_samplingFixture()));
+}
+
+void TestControl::load_port(QString port)
+{
+    if(serialItem->open_port(port))
+    {
+        testStage = IS_PORT_READY;
+        infoTest.infoFixture.port = port;
+        emit signal_update_infoFixture(infoTest.infoFixture);
+
+        cmd = serialItem->package_cmd(GET_FIXTURE);
+        emit signal_write_data(cmd);
+        timerRetry->start();
+    }
+    else
+    {
+        emit signal_openPort_failed(port);
+    }
 }
 
 /*******************************************************************************
-* Function Name  :  slot_add_fixture
+* Function Name  :  load_fixture
 * Description    :  添加治具
 * Input          :  None
 * Output         :  None
 * Return         :  None
 *******************************************************************************/
-void TestControl::slot_add_fixture(QString port)
+void TestControl::load_fixture(QString id)
 {
-    infoFixture.clear();
-    infoFixture.port = port;
-    serialItem->set_port(port);
-    if(serialItem->open_port(port))
+    testStage = IS_FIXTURE_READY;
+    infoTest.infoFixture.id = id;
+    emit signal_update_infoFixture(infoTest.infoFixture);
+}
+
+/*******************************************************************************
+* Function Name  :  load_deviceSN
+* Description    :  添加治具
+* Input          :  None
+* Output         :  None
+* Return         :  None
+*******************************************************************************/
+void TestControl::load_deviceSN(QString sn)
+{
+    testStage = IS_DEVICE_READY;
+    infoTest.infoFixture.deviceSN = sn;
+    testCPU->set_deviceSN(infoTest.infoFixture.deviceSN);
+    testMIIO->set_deviceSN(infoTest.infoFixture.deviceSN);
+    emit signal_update_infoFixture(infoTest.infoFixture);
+}
+
+/*******************************************************************************
+* Function Name  :  load_deviceADB
+* Description    :  载入设备ADB
+* Input          :  None
+* Output         :  None
+* Return         :  None
+*******************************************************************************/
+void TestControl::load_deviceADB(QString adb)
+{
+    testStage = IS_MATCHED;
+    infoTest.infoFixture.deviceADB = adb;
+    deviceItem->set_device(infoTest.infoFixture.deviceADB);
+    emit signal_update_infoFixture(infoTest.infoFixture);
+}
+
+/*******************************************************************************
+* Function Name  :  get_device
+* Description    :  查询设备
+* Input          :  None
+* Output         :  None
+* Return         :  None
+*******************************************************************************/
+void TestControl::sampling_deviceSN()
+{
+    if(IS_FIXTURE_READY == testStage)
     {
-        // 获取治具唯一id
-        serialItem->write_data(GET_FIXTURE);
-        timerRetry->start();
-    }
-    else
-    {
-        // 发送连接治具失败信号
-        emit signal_connectFixture_result(-1);
+        cmd = serialItem->package_cmd(GET_DEVICE);
+        emit signal_write_data(cmd);
     }
 }
 
@@ -131,10 +210,71 @@ void TestControl::slot_add_fixture(QString port)
 * Output         :  None
 * Return         :  None
 *******************************************************************************/
-void TestControl::slot_delete_fixture()
+void TestControl::remove_port()
+{
+    timerRetry->stop();
+    serialItem->close_port();
+    testStage = IS_FREE;
+    infoTest.clear();
+    emit signal_update_infoFixture(infoTest.infoFixture);
+}
+
+/*******************************************************************************
+* Function Name  :  remove_device
+* Description    :  移除设备
+* Input          :  None
+* Output         :  None
+* Return         :  None
+*******************************************************************************/
+void TestControl::remove_device()
+{
+    infoTest.infoFixture.deviceSN.clear();
+    infoTest.infoFixture.deviceADB.clear();
+    if(infoTest.infoFixture.port.isEmpty())
+    {
+        testStage = IS_FREE;
+    }
+    else if(infoTest.infoFixture.id.isEmpty())
+    {
+        testStage = IS_PORT_READY;
+        load_port(infoTest.infoFixture.port);
+    }
+    else
+    {
+        testStage = IS_FIXTURE_READY;
+    }
+}
+
+/*******************************************************************************
+* Function Name  :  slot_close_ports
+* Description    :  关闭串口
+* Input          :  None
+* Output         :  None
+* Return         :  None
+*******************************************************************************/
+void TestControl::slot_close_ports()
 {
     serialItem->close_port();
-    infoFixture.clear();
+}
+
+/*******************************************************************************
+* Function Name  :  slot_retry_samplingFixture
+* Description    :  重新检测治具
+* Input          :  None
+* Output         :  None
+* Return         :  None
+*******************************************************************************/
+void TestControl::slot_retry_samplingFixture()
+{
+    if(IS_PORT_READY == testStage)
+    {
+        cmd = serialItem->package_cmd(GET_FIXTURE);
+        emit signal_write_data(cmd);
+    }
+    else
+    {
+        timerRetry->stop();
+    }
 }
 
 /*******************************************************************************
@@ -146,27 +286,11 @@ void TestControl::slot_delete_fixture()
 *******************************************************************************/
 void TestControl::slot_getFixture_feedback(QString replyData, QString data)
 {
-    if(!data.contains("Fail"))
+    data = QString(QByteArray::fromHex(data.toLatin1()));
+    if("Fail" != data)
     {
-        // 解析出治具的sn
-        infoFixture.id = data;
-        emit signal_update_fixtureSN(infoFixture.id);
-    }
-}
-
-/*******************************************************************************
-* Function Name  :  slot_get_device
-* Description    :  采集设备SN
-* Input          :  None
-* Output         :  None
-* Return         :  None
-*******************************************************************************/
-void TestControl::slot_get_device()
-{
-    if(!infoFixture.isEmpty() && !infoFixture.isInvalid() && !infoFixture.isReady())
-    {
-        // 获取此时的设备号
-        serialItem->write_data(GET_DEVICE);
+        timerRetry->stop();
+        load_fixture(data);
     }
 }
 
@@ -179,28 +303,11 @@ void TestControl::slot_get_device()
 *******************************************************************************/
 void TestControl::slot_getDevice_feedback(QString replyData, QString data)
 {
-    if(!data.contains("Fail"))
+    data = QString(QByteArray::fromHex(data.toLatin1()));
+    if("Fail" != data)
     {
-        // 解析出设备的sn
-        infoFixture.deviceSN = data;
-        emit signal_update_deviceSN(infoFixture.deviceSN);
-        testCPU->set_deviceSN(infoFixture.deviceSN);
-        testMIIO->set_deviceSN(infoFixture.deviceSN);
+        load_deviceSN(data);
     }
-}
-
-/*******************************************************************************
-* Function Name  :  slot_set_device
-* Description    :  设置设备号
-* Input          :  None
-* Output         :  None
-* Return         :  None
-*******************************************************************************/
-void TestControl::slot_set_deviceADB(QString device)
-{
-    this->deviceADB = device;
-    deviceItem->set_device(device);
-    testCPU->set_deviceADB(device);
 }
 
 /*******************************************************************************
@@ -212,11 +319,18 @@ void TestControl::slot_set_deviceADB(QString device)
 *******************************************************************************/
 void TestControl::slot_start_test()
 {
-    qDebug()<<"CPU START TEST";
-    progress = 0;
-    isFailed = false;
-    infoTest.clear();
-    testCPU->start_test();
+    if(IS_MATCHED == testStage)
+    {
+        testStage = IS_TESTING;
+        emit signal_test_init();
+        progress = 0;
+        infoTest.test_init();
+        testCPU->start_test();
+    }
+    else
+    {
+        emit signal_update_infoFixture(infoTest.infoFixture);
+    }
 }
 
 /*******************************************************************************
@@ -228,14 +342,13 @@ void TestControl::slot_start_test()
 *******************************************************************************/
 void TestControl::slot_testCPU_result(int result,QString debugInfo)
 {
-    emit signal_testCPU_result(result,debugInfo);
     progress += 10;
+    emit signal_testCPU_result(result,debugInfo);
     emit signal_update_progress(progress);
     qDebug()<<"RTC START TEST";
     testRTC->start_test();
     if(result != 0)
     {
-        isFailed = true;
         infoTest.infoResult.cpu = false;
     }
     else
@@ -253,14 +366,13 @@ void TestControl::slot_testCPU_result(int result,QString debugInfo)
 *******************************************************************************/
 void TestControl::slot_testRTC_result(int result,QString debugInfo)
 {
-    emit signal_testRTC_result(result,debugInfo);
     progress += 10;
+    emit signal_testRTC_result(result,debugInfo);
     emit signal_update_progress(progress);
     qDebug()<<"G-SENSOR START TEST";
     testGravity->start_test();
     if(result != 0)
     {
-        isFailed = true;
         infoTest.infoResult.rtc = false;
     }
     else
@@ -278,14 +390,13 @@ void TestControl::slot_testRTC_result(int result,QString debugInfo)
 *******************************************************************************/
 void TestControl::slot_testGravity_result(int result,QString debugInfo)
 {
-    emit signal_testGravity_result(result,debugInfo);
     progress += 10;
+    emit signal_testGravity_result(result, debugInfo);
     emit signal_update_progress(progress);
     qDebug()<<"WIFI START TEST";
     testWiFi->start_test();
     if(result != 0)
     {
-        isFailed = true;
         infoTest.infoResult.gravity = false;
     }
     else
@@ -303,14 +414,13 @@ void TestControl::slot_testGravity_result(int result,QString debugInfo)
 *******************************************************************************/
 void TestControl::slot_testWiFi_result(int result,QString debugInfo)
 {
-    emit signal_testWiFi_result(result,debugInfo);
     progress += 10;
+    emit signal_testWiFi_result(result, debugInfo);
     emit signal_update_progress(progress);
     qDebug()<<"USB_VBUS START TEST";
     testUSB->start_test();
     if(result != 0)
     {
-        isFailed = true;
         infoTest.infoResult.wifi = false;
     }
     else
@@ -328,14 +438,13 @@ void TestControl::slot_testWiFi_result(int result,QString debugInfo)
 *******************************************************************************/
 void TestControl::slot_testUSB_result(int result,QString debugInfo)
 {
-    emit signal_testUSB_result(result,debugInfo);
     progress += 15;
+    emit signal_testUSB_result(result, debugInfo);
     emit signal_update_progress(progress);
     qDebug()<<"VOL START TEST";
     testVOL->start_test();
     if(result != 0)
     {
-        isFailed = true;
         infoTest.infoResult.usb = false;
     }
     else
@@ -353,26 +462,24 @@ void TestControl::slot_testUSB_result(int result,QString debugInfo)
 *******************************************************************************/
 void TestControl::slot_testVOL_result(int result,QString debugInfo)
 {
-    emit signal_testVOL_result(result,debugInfo);
     progress += 15;
+    emit signal_testVOL_result(result, debugInfo);
     emit signal_update_progress(progress);
     if(result != 0)
     {
-        isFailed = true;
         infoTest.infoResult.vol = false;
     }
     else
     {
         infoTest.infoResult.vol = true;
     }
-    if(isFailed)
+    if(infoTest.infoResult.vol && infoTest.infoResult.usb && infoTest.infoResult.rtc && infoTest.infoResult.gravity && infoTest.infoResult.cpu)
     {
-        // 直接上报服务器
-        emit signal_sync_testFailed(infoTest);
+        testMIIO->start_test();
     }
     else
     {
-        testMIIO->start_test();
+        testSYNC->start_test(infoTest);
     }
 }
 
@@ -385,22 +492,45 @@ void TestControl::slot_testVOL_result(int result,QString debugInfo)
 *******************************************************************************/
 void TestControl::slot_testMIIO_result(int result,QString debugInfo)
 {
-    qDebug()<<"###############################################################";
-    emit signal_testMIIO_result(result,debugInfo);
     progress += 20;
+    emit signal_testMIIO_result(result, debugInfo);
     emit signal_update_progress(progress);
     if(result != 0)
     {
-        isFailed = true;
         infoTest.infoResult.miio = false;
-        emit signal_sync_testFailed(infoTest);
     }
     else
     {
-        emit signal_sync_testPassed(infoTest);
         infoTest.infoResult.miio = true;
     }
+    testSYNC->start_test(infoTest);
+}
 
+/*******************************************************************************
+* Function Name  :  slot_testSYNC_result
+* Description    :  测试同步结果
+* Input          :  None
+* Output         :  None
+* Return         :  None
+*******************************************************************************/
+void TestControl::slot_testSYNC_result(int result, QString debugInfo)
+{
+    progress += 10;
+    emit signal_testSYNC_result(result, debugInfo);
+    emit signal_update_progress(progress);
+    emit signal_test_end();
+    if((0 == result) && infoTest.infoResult.isPassed())
+    {
+        emit signal_test_result(0);
+    }
+    else
+    {
+        emit signal_test_result(-1);
+    }
+    if(IS_TESTING == testStage)
+    {
+        testStage = IS_MATCHED;
+    }
 }
 
 /*******************************************************************************
@@ -412,57 +542,33 @@ void TestControl::slot_testMIIO_result(int result,QString debugInfo)
 *******************************************************************************/
 void TestControl::slot_update_infoMIIO(InfoMIIO infoMIIO)
 {
-    qDebug()<<"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$";
     infoTest.infoMIIO = infoMIIO;
-    qDebug()<<"***********************************"<<infoTest.infoMIIO.did;
 }
 
 /*******************************************************************************
-* Function Name  :  slot_syncTest_result
-* Description    :  同步测试结果
+* Function Name  :  slot_update_infoVOL
+* Description    :  刷新电压值
 * Input          :  None
 * Output         :  None
 * Return         :  None
 *******************************************************************************/
-void TestControl::slot_syncTest_success()
+void TestControl::slot_update_infoVOL(InfoVol infoVOL)
 {
-    emit signal_syncTest_result(0,debugInfoSync);
-    progress += 10;
-    emit signal_update_progress(progress);
-
-    // 有错误发生
-    if(isFailed)
-    {
-        emit signal_test_result(-1);
-    }
-    else
-    {
-        emit signal_test_result(0);
-    }
+    infoTest.infoVol = infoVOL;
 }
 
-/*******************************************************************************
-* Function Name  :  slot_syncTest_failed
-* Description    :  同步测试错误
-* Input          :  None
-* Output         :  None
-* Return         :  None
-*******************************************************************************/
-void TestControl::slot_syncTest_failed(QString)
+QString TestControl::get_device()
 {
-    emit signal_syncTest_result(-1,debugInfoSync);
-    emit signal_test_result(-1);
+    return infoTest.infoFixture.deviceADB;
 }
 
-/*******************************************************************************
-* Function Name  :  slot_stop_test
-* Description    :  停止检测
-* Input          :  None
-* Output         :  None
-* Return         :  None
-*******************************************************************************/
-void TestControl::slot_stop_test()
-{
 
+QString TestControl::get_deviceSN()
+{
+    return infoTest.infoFixture.deviceSN;
 }
 
+QString TestControl::get_port()
+{
+    return infoTest.infoFixture.port;
+}

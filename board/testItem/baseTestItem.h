@@ -2,8 +2,10 @@
 #define BASETESTITEM_H
 
 #include <QDebug>
-#include "device/deviceItem.h"
-#include "serial/serialItem.h"
+#include <QStringList>
+#include <QString>
+#include "board/deviceItem.h"
+#include "board/serialItem.h"
 #include "globaldefine.h"
 
 class BaseTestItem : public QObject
@@ -15,6 +17,7 @@ public:
     void start_test();
 
 signals:
+    void signal_write_data(QString);
     void signal_test_result(int,QString);
 
 public slots:
@@ -24,6 +27,9 @@ protected:
     SerialItem *serialItem;
 
     QString debugInfo;
+
+    CommandType cmdType;
+    QString cmd;
 };
 
 #endif // BASETESTITEM_H

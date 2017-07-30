@@ -18,17 +18,22 @@ public:
     void start_test();
 
 private slots:
-    void slot_usbA0B1_feedback(QString);
-    void slot_usbA1B0_feedback(QString);
-    void slot_usbA1B1_feedback(QString);
+    void slot_usbA0B1_feedback(QString,QString);
+    void slot_usbA1B0_feedback(QString,QString);
+    void slot_usbA1B1_feedback(QString,QString);
+    void slot_serial_timeout();
 
 private:
-    bool is_charging_ac();
-    bool is_charging_usb();
+    bool update_ac(bool&);
+    bool update_usb(bool&);
 
 private:
     QTime timeKeep;
     QEventLoop *loop;
+    QTimer *timer;
+
+    bool ac;
+    bool usb;
 };
 
 #endif // TESTUSB_H

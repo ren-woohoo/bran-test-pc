@@ -24,9 +24,11 @@ TestVOL::TestVOL(DeviceItem *deviceItem, SerialItem *serialItem)
 void TestVOL::data_init()
 {
     sysData = SysData::getInstance();
+
     timer = new QTimer(this);
     timer->setSingleShot(true);
-    timer->setInterval(2000);
+    timer->setInterval(3000);
+
     refDatas.init();
     refDatas = sysData->get_refDatas();
 }
@@ -40,8 +42,8 @@ void TestVOL::data_init()
 *******************************************************************************/
 void TestVOL::connect_init()
 {
-    connect(serialItem, SIGNAL(signal_getVoltage_feedback(QString)), this, SLOT(slot_getVoltage_feedback(QString)));
-    connect(timer, SIGNAL(timeout()), this, SLOT(slot_getVoltage_timeout()));
+    connect(serialItem, SIGNAL(signal_getVoltage_feedback(QString,QString)), this, SLOT(slot_getVoltage_feedback(QString,QString)));
+    connect(timer, SIGNAL(timeout()), this, SLOT(slot_serial_timeout()));
     connect(sysData, SIGNAL(signal_update_refDatas(RefDatas)), this, SLOT(slot_change_refDatas(RefDatas)));
 }
 
@@ -54,9 +56,10 @@ void TestVOL::connect_init()
 *******************************************************************************/
 void TestVOL::start_test()
 {
+    isFailed = false;
     debugInfo = "START TEST VOLTAGE ...\n";
-    numFailed = 0;
-    serialItem->write_data(GET_VOLTAGE);
+    cmd = serialItem->package_cmd(GET_VOLTAGE);
+    emit signal_write_data(cmd);
     timer->start();
 }
 
@@ -67,18 +70,20 @@ void TestVOL::start_test()
 * Output         :  None
 * Return         :  None
 *******************************************************************************/
-void TestVOL::slot_getVoltage_feedback(QString replyData)
+void TestVOL::slot_getVoltage_feedback(QString replyData,QString data)
 {
-    debugInfo.append(QString("%1\n").arg(replyData));
-
-    timer->stop();
-    if(replyData.contains("=") && replyData.contains(","))
+    debugInfo.append(QString("RECIVE:%1, DATA:%2, ASCII:%3\n").arg(replyData).arg(data).arg(QString(QByteArray::fromHex(data.toLatin1()))));
+    if(serialItem->package_cmd(GET_VOLTAGE) != cmd)
     {
-        replyData = replyData.mid(0,(replyData.length()-2));
-
+        return;
+    }
+    data = QString(QByteArray::fromHex(data.toLatin1()));
+    timer->stop();
+    if(data.contains("=") && data.contains(","))
+    {
         // 开始分析电压值
-        branData.clear();
-        QStringList listData = replyData.split(",");
+        infoVol.clear();
+        QStringList listData = data.split(",");
         QStringList list;
         for(int i = 0; i< listData.length(); ++i)
         {
@@ -87,7 +92,7 @@ void TestVOL::slot_getVoltage_feedback(QString replyData)
                 list = (listData.at(i)).split("=");
                 if(list.length() == 2)
                 {
-                    branData.vol0_LED = QString(list.at(1)).trimmed().toFloat();
+                    infoVol.vol0_LED = QString(list.at(1)).trimmed().toFloat();
                 }
             }
             else if(QString(listData.at(i)).contains("Vol1"))
@@ -95,7 +100,7 @@ void TestVOL::slot_getVoltage_feedback(QString replyData)
                 list = (listData.at(i)).split("=");
                 if(list.length() == 2)
                 {
-                    branData.vol1_TVOC = QString(list.at(1)).trimmed().toFloat();
+                    infoVol.vol1_TVOC = QString(list.at(1)).trimmed().toFloat();
                 }
             }
             else if(QString(listData.at(i)).contains("Vol2"))
@@ -103,7 +108,7 @@ void TestVOL::slot_getVoltage_feedback(QString replyData)
                 list = (listData.at(i)).split("=");
                 if(list.length() == 2)
                 {
-                    branData.vol2_AVCC = QString(list.at(1)).trimmed().toFloat();
+                    infoVol.vol2_AVCC = QString(list.at(1)).trimmed().toFloat();
                 }
             }
             else if(QString(listData.at(i)).contains("Vol3"))
@@ -111,7 +116,7 @@ void TestVOL::slot_getVoltage_feedback(QString replyData)
                 list = (listData.at(i)).split("=");
                 if(list.length() == 2)
                 {
-                    branData.vol3_WIFI = QString(list.at(1)).trimmed().toFloat();
+                    infoVol.vol3_WIFI = QString(list.at(1)).trimmed().toFloat();
                 }
             }
             else if(QString(listData.at(i)).contains("Vol4"))
@@ -119,7 +124,7 @@ void TestVOL::slot_getVoltage_feedback(QString replyData)
                 list = (listData.at(i)).split("=");
                 if(list.length() == 2)
                 {
-                    branData.vol4_RTC = QString(list.at(1)).trimmed().toFloat();
+                    infoVol.vol4_RTC = QString(list.at(1)).trimmed().toFloat();
                 }
             }
             else if(QString(listData.at(i)).contains("Vol5"))
@@ -127,7 +132,7 @@ void TestVOL::slot_getVoltage_feedback(QString replyData)
                 list = (listData.at(i)).split("=");
                 if(list.length() == 2)
                 {
-                    branData.vol5_IPSOUT = QString(list.at(1)).trimmed().toFloat();
+                    infoVol.vol5_IPSOUT = QString(list.at(1)).trimmed().toFloat();
                 }
             }
             else if(QString(listData.at(i)).contains("Vol6"))
@@ -135,7 +140,7 @@ void TestVOL::slot_getVoltage_feedback(QString replyData)
                 list = (listData.at(i)).split("=");
                 if(list.length() == 2)
                 {
-                    branData.vol6_DRAM = QString(list.at(1)).trimmed().toFloat();
+                    infoVol.vol6_DRAM = QString(list.at(1)).trimmed().toFloat();
                 }
             }
             else if(QString(listData.at(i)).contains("Vol7"))
@@ -143,39 +148,27 @@ void TestVOL::slot_getVoltage_feedback(QString replyData)
                 list = (listData.at(i)).split("=");
                 if(list.length() == 2)
                 {
-                    branData.vol7_5V = QString(list.at(1)).trimmed().toFloat();
+                    infoVol.vol7_5V = QString(list.at(1)).trimmed().toFloat();
                 }
             }
 
         }
-        if(analyse_data(branData))
+        emit signal_update_infoVOL(infoVol);
+        if(analyse_data(infoVol))
         {
-            // 测试成功
+            debugInfo.append("END TEST VOLTAGE --- PASS!!!");
             emit signal_test_result(0, debugInfo);
-            debugInfo.append("END TEST VOLTAGE ------ SUCCESS!!!");
         }
         else
         {
+            debugInfo.append("END TEST VOLTAGE --- FAIL!!!");
             emit signal_test_result(-1, debugInfo);
-            debugInfo.append("END TEST VOLTAGE ------ FAILED!!!");
         }
     }
     else
     {
-        if( ++numFailed < 3)
-        {
-            // 重试一次
-            emit serialItem->write_data(GET_VOLTAGE);
-            timer->start();
-        }
-        else
-        {
-            // 发送失败
-            emit signal_test_result(-1, debugInfo);
-            debugInfo.append("get voltage failed!!!\n");
-            debugInfo.append("END TEST VOLTAGE ------ FAILED!!!");
-            numFailed = 0;
-        }
+        debugInfo.append("END TEST VOLTAGE --- FAIL!!!");
+        emit signal_test_result(-1, debugInfo);
     }
 }
 
@@ -187,78 +180,82 @@ void TestVOL::slot_getVoltage_feedback(QString replyData)
 * Output         :  None
 * Return         :  None
 *******************************************************************************/
-bool TestVOL::analyse_data(InfoVol branData)
+bool TestVOL::analyse_data(InfoVol infoVol)
 {
-    if(is_valid(branData.vol0_LED, refDatas.dataVol0))
+    if(is_valid(infoVol.vol0_LED, refDatas.dataVol0))
     {
-        debugInfo.append(QString("VOL_LED=%1,Normal.\n").arg(branData.vol0_LED));
+        debugInfo.append(QString("VOL_LED=%1,Normal.\n").arg(infoVol.vol0_LED));
     }
     else
     {
-        debugInfo.append(QString("VOL_LED=%1,Error!\n").arg(branData.vol0_LED));
-        return false;
+        isFailed = true;
+        debugInfo.append(QString("VOL_LED=%1,Error!\n").arg(infoVol.vol0_LED));
     }
-    if(is_valid(branData.vol1_TVOC, refDatas.dataVol1))
+    if(is_valid(infoVol.vol1_TVOC, refDatas.dataVol1))
     {
-        debugInfo.append(QString("VOL_TVOC=%1,Normal.\n").arg(branData.vol1_TVOC));
-    }
-    else
-    {
-        debugInfo.append(QString("VOL_TVOC=%1,Error!\n").arg(branData.vol1_TVOC));
-        return false;
-    }
-    if(is_valid(branData.vol2_AVCC, refDatas.dataVol2))
-    {
-        debugInfo.append(QString("VOL_AVCC=%1,Normal.\n").arg(branData.vol2_AVCC));
+        debugInfo.append(QString("VOL_TVOC=%1,Normal.\n").arg(infoVol.vol1_TVOC));
     }
     else
     {
-        debugInfo.append(QString("VOL_AVCC=%1,Error!\n").arg(branData.vol2_AVCC));
-        return false;
+        debugInfo.append(QString("VOL_TVOC=%1,Error!\n").arg(infoVol.vol1_TVOC));
+        isFailed = true;
     }
-    if(is_valid(branData.vol3_WIFI, refDatas.dataVol3))
+    if(is_valid(infoVol.vol2_AVCC, refDatas.dataVol2))
     {
-        debugInfo.append(QString("VOL_WIFI=%1,Normal.\n").arg(branData.vol3_WIFI));
-    }
-    else
-    {
-        debugInfo.append(QString("VOL_WIFI=%1,Error!\n").arg(branData.vol3_WIFI));
-        return false;
-    }
-    if(is_valid(branData.vol4_RTC, refDatas.dataVol4))
-    {
-        debugInfo.append(QString("VOL_RTC=%1,Normal.\n").arg(branData.vol4_RTC));
+        debugInfo.append(QString("VOL_AVCC=%1,Normal.\n").arg(infoVol.vol2_AVCC));
     }
     else
     {
-        debugInfo.append(QString("VOL_RTC=%1,Error!\n").arg(branData.vol4_RTC));
-        return false;
+        debugInfo.append(QString("VOL_AVCC=%1,Error!\n").arg(infoVol.vol2_AVCC));
+        isFailed = true;
     }
-    if(is_valid(branData.vol5_IPSOUT, refDatas.dataVol5))
+    if(is_valid(infoVol.vol3_WIFI, refDatas.dataVol3))
     {
-        debugInfo.append(QString("VOL_IPSOUT=%1,Normal.\n").arg(branData.vol5_IPSOUT));
-    }
-    else
-    {
-        debugInfo.append(QString("VOL_IPSOUT=%1,Error!\n").arg(branData.vol5_IPSOUT));
-        return false;
-    }
-    if(is_valid(branData.vol6_DRAM, refDatas.dataVol6))
-    {
-        debugInfo.append(QString("VOL_DRAM=%1,Normal.\n").arg(branData.vol6_DRAM));
+        debugInfo.append(QString("VOL_WIFI=%1,Normal.\n").arg(infoVol.vol3_WIFI));
     }
     else
     {
-        debugInfo.append(QString("VOL_DRAM=%1,Error!\n").arg(branData.vol6_DRAM));
-        return false;
+        debugInfo.append(QString("VOL_WIFI=%1,Error!\n").arg(infoVol.vol3_WIFI));
+        isFailed = true;
     }
-    if(is_valid(branData.vol7_5V, refDatas.dataVol7))
+    if(is_valid(infoVol.vol4_RTC, refDatas.dataVol4))
     {
-        debugInfo.append(QString("VOL_5V=%1,Normal.\n").arg(branData.vol7_5V));
+        debugInfo.append(QString("VOL_RTC=%1,Normal.\n").arg(infoVol.vol4_RTC));
     }
     else
     {
-        debugInfo.append(QString("VOL_5V=%1,Error!\n").arg(branData.vol7_5V));
+        debugInfo.append(QString("VOL_RTC=%1,Error!\n").arg(infoVol.vol4_RTC));
+        isFailed = true;
+    }
+    if(is_valid(infoVol.vol5_IPSOUT, refDatas.dataVol5))
+    {
+        debugInfo.append(QString("VOL_IPSOUT=%1,Normal.\n").arg(infoVol.vol5_IPSOUT));
+    }
+    else
+    {
+        debugInfo.append(QString("VOL_IPSOUT=%1,Error!\n").arg(infoVol.vol5_IPSOUT));
+        isFailed = true;
+    }
+    if(is_valid(infoVol.vol6_DRAM, refDatas.dataVol6))
+    {
+        debugInfo.append(QString("VOL_DRAM=%1,Normal.\n").arg(infoVol.vol6_DRAM));
+    }
+    else
+    {
+        debugInfo.append(QString("VOL_DRAM=%1,Error!\n").arg(infoVol.vol6_DRAM));
+        isFailed = true;
+    }
+    if(is_valid(infoVol.vol7_5V, refDatas.dataVol7))
+    {
+        debugInfo.append(QString("VOL_5V=%1,Normal.\n").arg(infoVol.vol7_5V));
+    }
+    else
+    {
+        debugInfo.append(QString("VOL_5V=%1,Error!\n").arg(infoVol.vol7_5V));
+        isFailed = true;
+    }
+    if(isFailed)
+    {
         return false;
     }
     return true;
@@ -271,21 +268,11 @@ bool TestVOL::analyse_data(InfoVol branData)
 * Output         :  None
 * Return         :  None
 *******************************************************************************/
-void TestVOL::slot_getVoltage_timeout()
+void TestVOL::slot_serial_timeout()
 {
-    if(++numFailed < 3)
-    {
-        // 重试一次
-        serialItem->write_data(GET_VOLTAGE);
-        timer->start();
-    }
-    else
-    {
-        emit signal_test_result(-1, debugInfo);
-        debugInfo.append("get voltage timeout!!!\n");
-        debugInfo.append("GET VOLTAGE ------ FAILED!!!");
-        numFailed = 0;
-    }
+    debugInfo.append("SERIAL TIME OUT!!!\n");
+    debugInfo.append("END TEST VOLTAGE --- FAIL!!!");
+    emit signal_test_result(-1, debugInfo);
 }
 
 /*******************************************************************************

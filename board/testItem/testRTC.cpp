@@ -22,15 +22,17 @@ TestRTC::TestRTC(DeviceItem *deviceItem, SerialItem *serialItem)
 *******************************************************************************/
 void TestRTC::start_test()
 {
-    QString result = deviceItem->excute_cmd("shell hwclock");
-    if(result.contains("error"))
+    debugInfo = "START TEST RTC ...\n";
+    QString cmd = "hwclock";
+    QString result = deviceItem->excute_cmd(cmd);
+    debugInfo.append(QString("CMD: %1\n").arg(cmd));
+    debugInfo.append(QString("RESULT: %1\n").arg(result));
+    if(result.contains("seconds"))
     {
-        debugInfo.append("END TEST CPU SERIAL NUMBER ------ FAILED!!!");
-        emit signal_test_result(-1, debugInfo);
+        debugInfo.append("END TEST RTC --- PASS!!!");
+        emit signal_test_result(0, debugInfo);
         return;
     }
-    else
-    {
-        emit signal_test_result(0, debugInfo);
-    }
+    debugInfo.append("END TEST RTC --- FAIL!!!");
+    emit signal_test_result(-1, debugInfo);
 }

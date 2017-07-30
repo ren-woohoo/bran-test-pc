@@ -128,17 +128,17 @@ void WidgetTest::connect_init()
     connect(statusMore5, SIGNAL(clicked()), this, SLOT(slot_testUSB_debugInfo()));
     connect(statusMore6, SIGNAL(clicked()), this, SLOT(slot_testVOL_debugInfo()));
     connect(statusMore7, SIGNAL(clicked()), this, SLOT(slot_testMIIO_debugInfo()));
-    connect(statusMore8, SIGNAL(clicked()), this, SLOT(slot_syncTest_debugInfo()));
+    connect(statusMore8, SIGNAL(clicked()), this, SLOT(slot_testSYNC_debugInfo()));
 }
 
 /*******************************************************************************
-* Function Name  :  start_test
+* Function Name  :  slot_test_init
 * Description    :  开始检测
 * Input          :  None
 * Output         :  None
 * Return         :  None
 *******************************************************************************/
-void WidgetTest::start_test()
+void WidgetTest::slot_test_init()
 {
     statusTest1->set_status(TESTING);
     statusTest2->set_status(NORMAL);
@@ -169,6 +169,7 @@ void WidgetTest::start_test()
 void WidgetTest::slot_testCPU_result(int result, QString debugInfo)
 {
     debugInfoCPU = debugInfo;
+    qDebug()<<"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
     if(0 == result)
     {
         statusTest1->set_status(SUCCESS);
@@ -216,6 +217,7 @@ void WidgetTest::slot_testRTC_result(int result,QString debugInfo)
 void WidgetTest::slot_testGravity_result(int result, QString debugInfo)
 {
     debugInfoGravity = debugInfo;
+    qDebug()<<"*******************************************************";
     if(0 == result)
     {
         // 测试数据成功
@@ -334,13 +336,13 @@ void WidgetTest::slot_testMIIO_result(int result, QString debugInfo)
 }
 
 /*******************************************************************************
-* Function Name  :  slot_syncTest_result
+* Function Name  :  slot_testSYNC_result
 * Description    :  上传测试数据
 * Input          :  None
 * Output         :  None
 * Return         :  None
 *******************************************************************************/
-void WidgetTest::slot_syncTest_result(int result, QString debugInfo)
+void WidgetTest::slot_testSYNC_result(int result, QString debugInfo)
 {
     debugInfoSync = debugInfo;
     statusMore8->setEnabled(true);
@@ -366,6 +368,7 @@ void WidgetTest::slot_testCPU_debugInfo()
     widgetDebugInfo->set_debugTitle(QStringLiteral("检测CPU详情"));
     widgetDebugInfo->set_debugInfo(debugInfoCPU);
     widgetDebugInfo->show();
+    widgetDebugInfo->raise();
 }
 
 /*******************************************************************************
@@ -380,6 +383,7 @@ void WidgetTest::slot_testRTC_debugInfo()
     widgetDebugInfo->set_debugTitle(QStringLiteral("检测RTC详情"));
     widgetDebugInfo->set_debugInfo(debugInfoRTC);
     widgetDebugInfo->show();
+    widgetDebugInfo->raise();
 }
 
 /*******************************************************************************
@@ -394,6 +398,7 @@ void WidgetTest::slot_testGravity_debugInfo()
     widgetDebugInfo->set_debugTitle(QStringLiteral("检测G-Sensor详情"));
     widgetDebugInfo->set_debugInfo(debugInfoGravity);
     widgetDebugInfo->show();
+    widgetDebugInfo->raise();
 }
 
 /*******************************************************************************
@@ -408,6 +413,7 @@ void WidgetTest::slot_testWiFi_debugInfo()
     widgetDebugInfo->set_debugTitle(QStringLiteral("检测WiFi详情"));
     widgetDebugInfo->set_debugInfo(debugInfoWiFi);
     widgetDebugInfo->show();
+    widgetDebugInfo->raise();
 }
 
 /*******************************************************************************
@@ -422,6 +428,7 @@ void WidgetTest::slot_testUSB_debugInfo()
     widgetDebugInfo->set_debugTitle(QStringLiteral("检测USB_VBUS详情"));
     widgetDebugInfo->set_debugInfo(debugInfoUSB);
     widgetDebugInfo->show();
+    widgetDebugInfo->raise();
 }
 
 /*******************************************************************************
@@ -436,6 +443,7 @@ void WidgetTest::slot_testVOL_debugInfo()
     widgetDebugInfo->set_debugTitle(QStringLiteral("检测电压值详情"));
     widgetDebugInfo->set_debugInfo(debugInfoVOL);
     widgetDebugInfo->show();
+    widgetDebugInfo->raise();
 }
 
 /*******************************************************************************
@@ -450,6 +458,7 @@ void WidgetTest::slot_testMIIO_debugInfo()
     widgetDebugInfo->set_debugTitle(QStringLiteral("配置米家详情"));
     widgetDebugInfo->set_debugInfo(debugInfoMIIO);
     widgetDebugInfo->show();
+    widgetDebugInfo->raise();
 }
 
 /*******************************************************************************
@@ -459,10 +468,11 @@ void WidgetTest::slot_testMIIO_debugInfo()
 * Output         :  None
 * Return         :  None
 *******************************************************************************/
-void WidgetTest::slot_syncTest_debugInfo()
+void WidgetTest::slot_testSYNC_debugInfo()
 {
     widgetDebugInfo->set_debugTitle(QStringLiteral("上报服务器详情"));
     widgetDebugInfo->set_debugInfo(debugInfoSync);
     widgetDebugInfo->show();
+    widgetDebugInfo->raise();
 }
 

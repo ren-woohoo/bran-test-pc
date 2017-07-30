@@ -12,7 +12,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = BranBoardTest
 TEMPLATE = app
 
-DEFINES += TEST_MODE
+#DEFINES += TEST_MODE
 DEFINES -= UNICODE
 DEFINES +=UMBCS
 
@@ -29,82 +29,82 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += main.cpp\
-        widgetMain.cpp \
     server/serverUser.cpp \
     server/networkManager.cpp \
-    system/sysUser.cpp \
-    widget/widgetTest.cpp \
-    widget/widgetSetting.cpp \
-    widget/base/statusMore.cpp \
-    widget/base/statusTest.cpp \
-    widget/base/widgetDebugInfo.cpp \
-    file/fileConfig.cpp \
-    widget/widgetControl.cpp \
-    serial/serialControl.cpp \
-    device/deviceControl.cpp \
-    widget/base/widgetTestItem.cpp \
-    serial/serialItem.cpp \
-    device/deviceItem.cpp \
-    test/testCPU.cpp \
-    test/testUSB.cpp \
-    test/testGravity.cpp \
-    test/testRTC.cpp \
-    test/testWiFi.cpp \
-    test/baseTestItem.cpp \
-    test/testVOL.cpp \
-    test/testMIIO.cpp \
     server/serverMIIO.cpp \
     server/serverSync.cpp \
-    system/sysData.cpp \
-    test/testControl.cpp \
-    file/fileHodor.cpp \
     server/serverHodor.cpp \
-    widget/widgetHodor.cpp \
-    hodor/hodorControl.cpp
+    hodor/hodorControl.cpp \
+    board/testItem/baseTestItem.cpp \
+    board/testItem/testCPU.cpp \
+    board/testItem/testGravity.cpp \
+    board/testItem/testMIIO.cpp \
+    board/testItem/testRTC.cpp \
+    board/testItem/testUSB.cpp \
+    board/testItem/testVOL.cpp \
+    board/testItem/testWiFi.cpp \
+    control/sysData.cpp \
+    widget/widgetMain.cpp \
+    widget/hodor/widgetHodor.cpp \
+    widget/board/widgetControl.cpp \
+    widget/board/widgetSetting.cpp \
+    widget/board/base/statusMore.cpp \
+    widget/board/base/statusTest.cpp \
+    widget/board/base/widgetDebugInfo.cpp \
+    widget/board/item/widgetTest.cpp \
+    file/fileConfig.cpp \
+    file/fileHodor.cpp \
+    control/DeviceControl.cpp \
+    control/SerialControl.cpp \
+    widget/board/item/widgetItem.cpp \
+    board/serialItem.cpp \
+    board/deviceItem.cpp \
+    board/testControl.cpp \
+    board/testItem/testSYNC.cpp
 
-HEADERS  += widgetMain.h \
-    server/serverUser.h \
+HEADERS  += server/serverUser.h \
     server/networkManager.h \
-    system/sysUser.h \
     globaldefine.h \
-    widget/widgetTest.h \
-    widget/widgetSetting.h \
-    widget/base/statusMore.h \
-    widget/base/statusTest.h \
-    widget/base/widgetDebugInfo.h \
-    file/fileConfig.h \
-    widget/widgetControl.h \
-    serial/serialControl.h \
-    device/deviceControl.h \
-    widget/base/widgetTestItem.h \
-    serial/serialItem.h \
-    device/deviceItem.h \
-    test/testUSB.h \
-    test/testGravity.h \
-    test/testRTC.h \
-    test/testWiFi.h \
-    test/baseTestItem.h \
-    test/testVOL.h \
-    test/testMIIO.h \
     server/serverMIIO.h \
     server/serverSync.h \
-    test/testCPU.h \
-    system/sysData.h \
-    test/testControl.h \
-    file/fileHodor.h \
     server/serverHodor.h \
-    widget/widgetHodor.h \
-    hodor/hodorControl.h
+    hodor/hodorControl.h \
+    board/testItem/baseTestItem.h \
+    board/testItem/testCPU.h \
+    board/testItem/testGravity.h \
+    board/testItem/testMIIO.h \
+    board/testItem/testRTC.h \
+    board/testItem/testUSB.h \
+    board/testItem/testVOL.h \
+    board/testItem/testWiFi.h \
+    widget/widgetMain.h \
+    widget/hodor/widgetHodor.h \
+    widget/board/widgetControl.h \
+    widget/board/widgetSetting.h \
+    widget/board/base/statusMore.h \
+    widget/board/base/statusTest.h \
+    widget/board/base/widgetDebugInfo.h \
+    widget/board/item/widgetTest.h \
+    file/fileConfig.h \
+    file/fileHodor.h \
+    control/deviceControl.h \
+    control/serialControl.h \
+    board/deviceItem.h \
+    board/serialItem.h \
+    widget/board/item/widgetItem.h \
+    board/testControl.h \
+    control/sysData.h \
+    board/testItem/testSYNC.h
 
-FORMS    += widgetMain.ui \
-    widget/widgetTest.ui \
-    widget/widgetSetting.ui \
-    widget/base/statusMore.ui \
-    widget/base/statusTest.ui \
-    widget/base/widgetDebugInfo.ui \
-    widget/widgetControl.ui \
-    widget/base/widgetTestItem.ui \
-    widget/widgetHodor.ui
+FORMS    += widget/widgetMain.ui \
+    widget/hodor/widgetHodor.ui \
+    widget/board/widgetControl.ui \
+    widget/board/widgetSetting.ui \
+    widget/board/base/statusMore.ui \
+    widget/board/base/statusTest.ui \
+    widget/board/base/widgetDebugInfo.ui \
+    widget/board/item/widgetTest.ui \
+    widget/board/item/widgetTestItem.ui
 
 
 INCLUDEPATH +=

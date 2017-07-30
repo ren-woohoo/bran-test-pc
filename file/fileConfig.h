@@ -19,7 +19,7 @@
 #define REF_DRAM    "REF_DRAM"
 #define REF_5V      "REF_5V"
 
-#define DEFAULT_DATA_ERROR      "0.2"
+#define DEFAULT_DATA_ERROR      "0.5"
 #define DEFAULT_REF_LED         "3.3"
 #define DEFAULT_REF_TVOC        "1.8"
 #define DEFAULT_REF_AVCC        "3"

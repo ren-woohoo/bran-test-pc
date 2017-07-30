@@ -34,16 +34,20 @@ void ServerSync::slot_sync_testPassed(InfoTest infoTest)
     QString encrypted = networkManage->encrypted_string(timestamp);
     request.setRawHeader("Timestamp", timestamp.toLatin1());
     request.setRawHeader("Encrypted", encrypted.toLatin1());
+    request.setRawHeader("Version", QString(VERSION).toLatin1());
+    request.setRawHeader("Api-Version", QString("1").toLatin1());
+    request.setRawHeader("Client", QString("pc").toLatin1());
+    request.setRawHeader("Package", QString("bran").toLatin1());
 #ifdef TEST_MODE
     request.setRawHeader("test-db", "1");
 #endif
-    QString str = QString(URL_SERVER) + QString(REQUEST_SYNC_TEST_PASSED) + QString("/%1?sn=%2").arg(infoTest.infoMIIO.mac).arg(infoTest.sn);
+    QString str = QString(URL_SERVER) + QString(REQUEST_SYNC_TEST_PASSED) + QString("/%1?sn=%2").arg(infoTest.infoMIIO.mac).arg(infoTest.infoFixture.deviceSN);
     QUrl url = QUrl::fromEncoded(str.toLatin1());
     request.setUrl(url);
 
     QJsonObject test;
     QJsonObject obj;
-    obj.insert("sn",infoTest.sn);
+    obj.insert("sn",infoTest.infoFixture.deviceSN);
     obj.insert("did",infoTest.infoMIIO.did);
     obj.insert("mac",infoTest.infoMIIO.mac);
     obj.insert("key",infoTest.infoMIIO.key);
@@ -54,18 +58,18 @@ void ServerSync::slot_sync_testPassed(InfoTest infoTest)
     obj.insert("usb",infoTest.infoResult.usb);
     obj.insert("vol",infoTest.infoResult.vol);
     obj.insert("miio",infoTest.infoResult.miio);
-//    obj.insert("vol_LED",infoTest.infoVol.vol0_LED);
-//    obj.insert("vol_TVOC",infoTest.infoVol.vol1_TVOC);
-//    obj.insert("vol_AVCC",infoTest.infoVol.vol2_AVCC);
-//    obj.insert("vol_WIFI",infoTest.infoVol.vol3_WIFI);
-//    obj.insert("vol_RTC",infoTest.infoVol.vol4_RTC);
-//    obj.insert("vol_IPSOUT",infoTest.infoVol.vol5_IPSOUT);
-//    obj.insert("vol_DRAM",infoTest.infoVol.vol6_DRAM);
-//    obj.insert("vol_5V",infoTest.infoVol.vol7_5V);
+    obj.insert("vol_LED",infoTest.infoVol.vol0_LED);
+    obj.insert("vol_TVOC",infoTest.infoVol.vol1_TVOC);
+    obj.insert("vol_AVCC",infoTest.infoVol.vol2_AVCC);
+    obj.insert("vol_WIFI",infoTest.infoVol.vol3_WIFI);
+    obj.insert("vol_RTC",infoTest.infoVol.vol4_RTC);
+    obj.insert("vol_IPSOUT",infoTest.infoVol.vol5_IPSOUT);
+    obj.insert("vol_DRAM",infoTest.infoVol.vol6_DRAM);
+    obj.insert("vol_5V",infoTest.infoVol.vol7_5V);
     test.insert("test_data",obj);
     QJsonDocument document;
     document.setObject(test);
-    qDebug()<<"##################"<<document.toJson();
+    requestData = QString(document.toJson());
     networkManage->post_request(request,document.toJson());
 }
 
@@ -91,16 +95,20 @@ void ServerSync::slot_sync_testFailed(InfoTest infoTest)
     QString encrypted = networkManage->encrypted_string(timestamp);
     request.setRawHeader("Timestamp", timestamp.toLatin1());
     request.setRawHeader("Encrypted", encrypted.toLatin1());
+    request.setRawHeader("Version", QString(VERSION).toLatin1());
+    request.setRawHeader("Api-Version", QString("1").toLatin1());
+    request.setRawHeader("Client", QString("pc").toLatin1());
+    request.setRawHeader("Package", QString("bran").toLatin1());
 #ifdef TEST_MODE
     request.setRawHeader("test-db", "1");
 #endif
-    QString str = QString(URL_SERVER) + QString(REQUEST_SYNC_TEST_FAILED) + QString("?sn=%1").arg(infoTest.sn);
+    QString str = QString(URL_SERVER) + QString(REQUEST_SYNC_TEST_FAILED) + QString("?sn=%1").arg(infoTest.infoFixture.deviceSN);
     QUrl url = QUrl::fromEncoded(str.toLatin1());
     request.setUrl(url);
 
     QJsonObject test;
     QJsonObject obj;
-    obj.insert("sn",infoTest.sn);
+    obj.insert("sn",infoTest.infoFixture.deviceSN);
     obj.insert("cpu",infoTest.infoResult.cpu);
     obj.insert("rtc",infoTest.infoResult.rtc);
     obj.insert("gravity",infoTest.infoResult.gravity);
@@ -119,6 +127,7 @@ void ServerSync::slot_sync_testFailed(InfoTest infoTest)
     test.insert("test_data",obj);
     QJsonDocument document;
     document.setObject(test);
+    requestData = QString(document.toJson());
     networkManage->post_request(request,document.toJson());
 }
 
@@ -135,6 +144,7 @@ void ServerSync::slot_syncTest_success(QString replyData)
     QByteArray ba = replyData.toLatin1();
     QJsonParseError jsonError;
     QJsonDocument doucment = QJsonDocument::fromJson(ba, &jsonError);
+    QString result = QString("REQUEST:%1\n, REPLY:%2").arg(requestData).arg(replyData);
     if(jsonError.error == QJsonParseError::NoError)
     {
         if(doucment.isObject())
@@ -147,34 +157,34 @@ void ServerSync::slot_syncTest_success(QString replyData)
                 {
                     if(codeValue.toVariant().toInt() != 0)
                     {
-                        emit signal_syncTest_failed(replyData);
+                        emit signal_syncTest_failed(result);
                         return;
                     }
                     else
                     {
-                        emit signal_syncTest_success();
+                        emit signal_syncTest_success(result);
                     }
                 }
                 else
                 {
-                    emit signal_syncTest_failed(replyData);
+                    emit signal_syncTest_failed(result);
                     return;
                 }
             }
             else
             {
-                emit signal_syncTest_failed(replyData);
+                emit signal_syncTest_failed(result);
                 return;
             }
         }
         else
         {
-            emit signal_syncTest_failed(replyData);
+            emit signal_syncTest_failed(result);
         }
     }
     else
     {
-        emit signal_syncTest_failed(replyData);
+        emit signal_syncTest_failed(result);
     }
 }
 
@@ -187,7 +197,8 @@ void ServerSync::slot_syncTest_success(QString replyData)
 *******************************************************************************/
 void ServerSync::slot_syncTest_failed(QString replyData)
 {
-    emit signal_syncTest_failed(replyData);
+    QString result = QString("REQUEST:%1\n, REPLY:%2").arg(requestData).arg(replyData);
+    emit signal_syncTest_failed(result);
 }
 
 /*******************************************************************************
@@ -199,7 +210,8 @@ void ServerSync::slot_syncTest_failed(QString replyData)
 *******************************************************************************/
 void ServerSync::slot_syncTest_timeout()
 {
-    emit signal_syncTest_failed("TIME OUT");
+    QString result = QString("REQUEST:%1\n, REPLY:TIME OUT").arg(requestData);
+    emit signal_syncTest_failed(result);
 }
 
 /*******************************************************************************

@@ -4,16 +4,13 @@
 #include <QWidget>
 #include <QTimer>
 
-#include "system/sysUser.h"
-#include "widget/widgetTest.h"
-#include "widget/widgetControl.h"
-#include "widget/widgetSetting.h"
-#include "widget/widgetHodor.h"
-#include "device/deviceControl.h"
-
-#include "device/deviceControl.h"
-#include "serial/serialControl.h"
+#include "widget/board/widgetControl.h"
+#include "widget/board/widgetSetting.h"
+#include "widget/hodor/widgetHodor.h"
+#include "control/deviceControl.h"
+#include "control/serialControl.h"
 #include "hodor/hodorControl.h"
+#include "server/serverUser.h"
 
 namespace Ui {
 class WidgetMain;
@@ -31,6 +28,7 @@ signals:
     void signal_user_login(QString,QString);                            // 用户登录信号
     void signal_user_modify(QString);                                   // 用户修改密码
     void signal_userLogin_success();                                    // 用户登录成功
+    void signal_close_ports();
 
 private slots:
     void slot_login_result(int);
@@ -42,6 +40,10 @@ private slots:
     void on_edit_newPassword2_editingFinished();
     void slot_quit_program();
 
+protected:
+    void keyPressEvent(QKeyEvent * event);
+    void closeEvent(QCloseEvent *event);
+
 private:
     void data_init();
     void connect_init();
@@ -49,11 +51,11 @@ private:
 
 private:
     Ui::WidgetMain *ui;
-    SysUser *sysUser;
 
     DeviceControl *deviceControl;
     SerialControl *serialControl;
     HodorControl *hodorControl;
+    ServerUser *serverUser;
 
     WidgetControl *widgetControl;
     WidgetSetting *widgetSetting;

@@ -11,9 +11,14 @@ TestUSB::TestUSB(DeviceItem *deviceItem, SerialItem *serialItem)
     : BaseTestItem(deviceItem, serialItem)
 {
     loop = new QEventLoop(this);
-    connect(serialItem, SIGNAL(signal_usbA0B1_feedback(QString)), this, SLOT(slot_usbA0B1_feedback(QString)));
-    connect(serialItem, SIGNAL(signal_usbA1B0_feedback(QString)), this, SLOT(slot_usbA1B0_feedback(QString)));
-    connect(serialItem, SIGNAL(signal_usbA1B1_feedback(QString)), this, SLOT(slot_usbA1B1_feedback(QString)));
+    timer = new QTimer(this);
+    timer->setSingleShot(true);
+    timer->setInterval(5000);
+
+    connect(timer, SIGNAL(timeout()), this, SLOT(slot_serial_timeout()));
+    connect(serialItem, SIGNAL(signal_usbA0B1_feedback(QString,QString)), this, SLOT(slot_usbA0B1_feedback(QString,QString)));
+    connect(serialItem, SIGNAL(signal_usbA1B0_feedback(QString,QString)), this, SLOT(slot_usbA1B0_feedback(QString,QString)));
+    connect(serialItem, SIGNAL(signal_usbA1B1_feedback(QString,QString)), this, SLOT(slot_usbA1B1_feedback(QString,QString)));
 }
 
 /*******************************************************************************
@@ -25,7 +30,11 @@ TestUSB::TestUSB(DeviceItem *deviceItem, SerialItem *serialItem)
 *******************************************************************************/
 void TestUSB::start_test()
 {
-    serialItem->write_data(CHANGE_USB_A0B1);
+    debugInfo = "START TEST DCIN_VBUS ...\n";
+    cmd = serialItem->package_cmd(CHANGE_USB_A0B1);
+    debugInfo.append(QString("SEND:%1, HEX:%2\n").arg(QString(QByteArray::fromHex(cmd.toLatin1()))).arg(cmd));
+    emit signal_write_data(cmd);
+    timer->start();
 }
 
 /*******************************************************************************
@@ -35,29 +44,44 @@ void TestUSB::start_test()
 * Output         :  None
 * Return         :  None
 *******************************************************************************/
-void TestUSB::slot_usbA0B1_feedback(QString replyData)
+void TestUSB::slot_usbA0B1_feedback(QString replyData,QString data)
 {
-    // 改变成功
-    if(replyData.contains("Success"))
+    debugInfo.append(QString("RECIVE:%1, DATA:%2, ASCII:%3\n").arg(replyData).arg(data).arg(QString(QByteArray::fromHex(data.toLatin1()))));
+    if(serialItem->package_cmd(CHANGE_USB_A0B1) != cmd)
     {
-        debugInfo.append("A0B1 SUCCESS:\n");
+        return;
+    }
+    timer->stop();
+    data = QString(QByteArray::fromHex(data.toLatin1()));
+    if("Success" == data)
+    {
+        debugInfo.append("VERIFY A0B1 ...\n");
         timeKeep.restart();
-        while(timeKeep.elapsed() < 10000)
+        while(timeKeep.elapsed() < 3000)
         {
-            if(!is_charging_ac() && is_charging_usb())
+            if(update_ac(ac) && update_usb(usb))
             {
-                debugInfo.append("Change Usb A1B1\n");
-                serialItem->write_data(CHANGE_USB_A1B1);
-                return;
+                if(!ac && usb)
+                {
+                    debugInfo.append("CHANGE USB A1B1 ...\n");
+                    cmd = serialItem->package_cmd(CHANGE_USB_A1B1);
+                    debugInfo.append(QString("SEND:%1, HEX:%2\n").arg(QString(QByteArray::fromHex(cmd.toLatin1()))).arg(cmd));
+                    emit signal_write_data(cmd);
+                    timer->start();
+                    return;
+                }
             }
-            QTimer::singleShot(1000, loop, SLOT(quit()));
+            QTimer::singleShot(500, loop, SLOT(quit()));
             loop->exec();
         }
+        debugInfo.append("TIME OUT!!!\n");
+        debugInfo.append("END TEST USB_VBUS --- FAIL!!!");
         emit signal_test_result(-1, debugInfo);
     }
     else
     {
-        debugInfo.append("END TEST USB_VBUS ------ FAILED!!!");
+        debugInfo.append("A0B1 IS FAILED!!!\n");
+        debugInfo.append("END TEST USB_VBUS --- FAIL!!!");
         emit signal_test_result(-1, debugInfo);
     }
 }
@@ -69,27 +93,44 @@ void TestUSB::slot_usbA0B1_feedback(QString replyData)
 * Output         :  None
 * Return         :  None
 *******************************************************************************/
-void TestUSB::slot_usbA1B1_feedback(QString replyData)
+void TestUSB::slot_usbA1B1_feedback(QString replyData,QString data)
 {
-    // 改变成功
-    if(replyData.contains("Success"))
+    debugInfo.append(QString("RECIVE:%1, DATA:%2, ASCII:%3\n").arg(replyData).arg(data).arg(QString(QByteArray::fromHex(data.toLatin1()))));
+    if(serialItem->package_cmd(CHANGE_USB_A1B1) != cmd)
     {
-        debugInfo.append("A1B1 SUCCESS:\n");
+        return;
+    }
+    timer->stop();
+    data = QString(QByteArray::fromHex(data.toLatin1()));
+    if("Success" == data)
+    {
+        debugInfo.append("VERIFY A1B1 ...\n");
         timeKeep.restart();
-        while(timeKeep.elapsed() < 10000)
+        while(timeKeep.elapsed() < 3000)
         {
-            if(is_charging_ac() && is_charging_usb())
+            if(update_ac(ac) && update_usb(usb))
             {
-                debugInfo.append("Change Usb A1B0\n");
-                serialItem->write_data(CHANGE_USB_A1B0);
-                return;
+                if(ac && usb)
+                {
+                    debugInfo.append("CHANGE USB A1B0 ...\n");
+                    cmd = serialItem->package_cmd(CHANGE_USB_A1B0);
+                    debugInfo.append(QString("SEND:%1, HEX:%2\n").arg(QString(QByteArray::fromHex(cmd.toLatin1()))).arg(cmd));
+                    emit signal_write_data(cmd);
+                    timer->start();
+                    return;
+                }
             }
+            QTimer::singleShot(500, loop, SLOT(quit()));
+            loop->exec();
         }
+        debugInfo.append("TIME OUT!!!\n");
+        debugInfo.append("END TEST USB_VBUS --- FAIL!!!");
         emit signal_test_result(-1, debugInfo);
     }
     else
     {
-        debugInfo.append("END TEST USB_VBUS ------ FAILED!!!");
+        debugInfo.append("A1B1 IS FAILED!!!\n");
+        debugInfo.append("END TEST USB_VBUS --- FAIL!!!");
         emit signal_test_result(-1, debugInfo);
     }
 }
@@ -101,71 +142,121 @@ void TestUSB::slot_usbA1B1_feedback(QString replyData)
 * Output         :  None
 * Return         :  None
 *******************************************************************************/
-void TestUSB::slot_usbA1B0_feedback(QString replyData)
+void TestUSB::slot_usbA1B0_feedback(QString replyData,QString data)
 {
-    // 改变成功
-    if(replyData.contains("Success"))
+    debugInfo.append(QString("RECIVE:%1, DATA:%2, ASCII:%3\n").arg(replyData).arg(data).arg(QString(QByteArray::fromHex(data.toLatin1()))));
+    if(serialItem->package_cmd(CHANGE_USB_A1B0) != cmd)
     {
-        debugInfo.append("A1B0 SUCCESS:\n");
+        return;
+    }
+    timer->stop();
+    data = QString(QByteArray::fromHex(data.toLatin1()));
+
+    // 改变成功
+    if("Success" == data)
+    {
+        debugInfo.append("VERIFY A1B0 ...\n");
         timeKeep.restart();
-        while(timeKeep.elapsed() < 10000)
+        while(timeKeep.elapsed() < 3000)
         {
-            if(is_charging_ac() && !is_charging_usb())
+            if(update_ac(ac) && update_usb(usb))
             {
-                debugInfo.append("Change Usb A1B0\n");
-                emit signal_test_result(0, debugInfo);
-                debugInfo.append("END TEST USB_VBUS ------ SUCCESS!!!");
-                return;
+                if(ac && !usb)
+                {
+                    debugInfo.append("END TEST USB_VBUS --- PASS!!!");
+                    emit signal_test_result(0, debugInfo);
+                    return;
+                }
             }
+            QTimer::singleShot(500, loop, SLOT(quit()));
+            loop->exec();
         }
+        debugInfo.append("TIME OUT!!!\n");
+        debugInfo.append("END TEST USB_VBUS --- FAIL!!!");
         emit signal_test_result(-1, debugInfo);
     }
     else
     {
-        debugInfo.append("END TEST USB_VBUS ------ FAILED!!!");
+        debugInfo.append("A1B0 IS FAILED!!!\n");
+        debugInfo.append("END TEST USB_VBUS --- FAIL!!!");
         emit signal_test_result(-1, debugInfo);
     }
 }
 
 /*******************************************************************************
-* Function Name  :  is_charging_ac
+* Function Name  :  update_ac
 * Description    :  判断是否通过底座充电
 * Input          :  None
 * Output         :  None
 * Return         :  None
 *******************************************************************************/
-bool TestUSB::is_charging_ac()
+bool TestUSB::update_ac(bool &ac)
 {
-    QString result = deviceItem->excute_cmd(QString("shell cat %1").arg(DEVICE_POWER_AC));
-    int ac = 0;
-    ac = result.trimmed().toInt();
-    qDebug()<<"AC:"<<result;
-    debugInfo.append(QString("AC:%1\n").arg(ac));
-    if(1 == ac)
+    QString cmd = "cat /sys/class/power_supply/ac/present";
+    QString result = deviceItem->excute_cmd(cmd);
+    result = result.trimmed();
+    debugInfo.append(QString("CMD: %1\n").arg(cmd));
+    debugInfo.append(QString("RESULT: %1\n").arg(result));
+
+    if(result.length() == 1)
     {
-        return true;
+        if(result.toInt() == 1)
+        {
+            ac = true;
+            return true;
+        }
+        else if(result.toInt() == 0)
+        {
+            ac = false;
+            return true;
+        }
     }
+    debugInfo.append("UPDATE AC IS FAILED!!!\n");
     return false;
 }
 
 /*******************************************************************************
-* Function Name  :  is_charing_usb
+* Function Name  :  update_usb
 * Description    :  判断是否通过usb充电
 * Input          :  None
 * Output         :  None
 * Return         :  None
 *******************************************************************************/
-bool TestUSB::is_charging_usb()
+bool TestUSB::update_usb(bool &usb)
 {
-    qDebug()<<"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
-    QString result = deviceItem->excute_cmd(QString("shell cat %1").arg(DEVICE_POWER_USB));
-    int usb = 0;
-    usb = result.trimmed().toInt();
-    qDebug()<<"USB:"<<result;
-    debugInfo.append(QString("USB:%1\n").arg(usb));
-    if(1 == usb)
+    QString cmd = "cat /sys/class/power_supply/usb/present";
+    QString result = deviceItem->excute_cmd(cmd);
+    result = result.trimmed();
+    debugInfo.append(QString("CMD: %1\n").arg(cmd));
+    debugInfo.append(QString("RESULT: %1\n").arg(result));
+
+    if(result.length() == 1)
     {
-        return true;
+        if(result.toInt() == 1)
+        {
+            usb = true;
+            return true;
+        }
+        else if(result.toInt() == 0)
+        {
+            usb = false;
+            return true;
+        }
     }
+    debugInfo.append("UPDATE USB IS FAILED!!!\n");
     return false;
+}
+
+/*******************************************************************************
+* Function Name  :  slot_serial_timeout
+* Description    :  串口超时
+* Input          :  None
+* Output         :  None
+* Return         :  None
+*******************************************************************************/
+void TestUSB::slot_serial_timeout()
+{
+    debugInfo.append("SERIAL TIME OUT!!!\n");
+    debugInfo.append("END TEST USB_VBUS --- FAIL!!!");
+    emit signal_test_result(-1, debugInfo);
 }

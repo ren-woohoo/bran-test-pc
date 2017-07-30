@@ -22,8 +22,12 @@ TestCPU::TestCPU(DeviceItem* deviceItem, SerialItem *serialItem)
 *******************************************************************************/
 void TestCPU::start_test()
 {
+    debugInfo = "START TEST CPU ...\n";
     QString sn;
-    QString result = deviceItem->excute_cmd("shell cat /proc/cpuinfo");
+    QString cmd = " cat /proc/cpuinfo";
+    QString result = deviceItem->excute_cmd(cmd);
+    debugInfo.append(QString("CMD: %1\n").arg(cmd));
+    debugInfo.append(QString("RESULT: %1\n").arg(result));
     QStringList resultList = result.split("\n");
     for(int i = 0; i < resultList.length(); ++i)
     {
@@ -35,17 +39,20 @@ void TestCPU::start_test()
             {
                 sn = strList.at(1);
                 sn = sn.trimmed();
-                debugInfo.append(QString("SN:%1\n").arg(sn));
+                debugInfo.append(QString("CURRENT SN:%1\n").arg(sn));
             }
         }
     }
-    qDebug()<<sn;
+    debugInfo.append(QString("SN:%1\n, deviceSN:%2\n, deviceADB:%3\n").arg(sn).arg(deviceSN).arg(deviceADB));
+
     if((sn == deviceSN) && (sn.contains(deviceADB.mid(8,7))))
     {
+        debugInfo.append("END TEST CPU --- PASS!!!");
         emit signal_test_result(0, debugInfo);
     }
     else
     {
+        debugInfo.append("END TEST CPU --- FAIL!!!");
         emit signal_test_result(-1, debugInfo);
     }
 }

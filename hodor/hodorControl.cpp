@@ -190,14 +190,15 @@ void HodorControl::slot_sync_hodor()
 *******************************************************************************/
 bool HodorControl::refresh_device(QString deviceADB)
 {
+    return true;
     infoHodor.init();
     deviceItem->set_device(deviceADB);
     infoDevice.adb = deviceADB;
-    QString result1 = deviceItem->excute_cmd("shell cat /usr/bin/qtapp/hodor_result.txt");
+    QString result1 = deviceItem->excute_cmd("cat /usr/bin/qtapp/hodor_result.txt");
     QStringList resultList1;
     QString item;
     QString result;
-    if(result1.contains("TEST"))
+    if(result1.contains("TEST_"))
     {
         resultList1 = (result1.trimmed()).split("\n");
         for(int i = 0; i < resultList1.length(); ++i)
@@ -284,7 +285,7 @@ bool HodorControl::refresh_device(QString deviceADB)
     {
         return false;
     }
-    QString result2 = deviceItem->excute_cmd("shell cat /usr/bin/qtapp/etc/device.conf");
+    QString result2 = deviceItem->excute_cmd("cat /usr/bin/qtapp/etc/device.conf");
     QStringList resultList2 = result2.split("\n");
     QString row;
     qDebug()<<result2;
@@ -305,7 +306,7 @@ bool HodorControl::refresh_device(QString deviceADB)
             infoDevice.key = row.split("=").at(1);
         }
     }
-    QString result3 = deviceItem->excute_cmd("shell cat /proc/cpuinfo");
+    QString result3 = deviceItem->excute_cmd("cat /proc/cpuinfo");
     QStringList resultList3 = result3.split("\n");
     for(int i = 0; i < resultList3.length(); ++i)
     {

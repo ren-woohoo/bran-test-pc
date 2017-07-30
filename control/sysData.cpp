@@ -28,6 +28,7 @@ SysData *SysData::getInstance()
 SysData::SysData()
     : QThread()
 {
+    qRegisterMetaType<RefDatas>("RefDatas");
     data_init();
     connect_init();
     moveToThread(this);

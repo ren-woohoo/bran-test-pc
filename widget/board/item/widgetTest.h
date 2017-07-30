@@ -2,9 +2,9 @@
 #define WIDGETTEST_H
 
 #include <QWidget>
-#include "widget/base/statusTest.h"
-#include "widget/base/statusMore.h"
-#include "widget/base/widgetDebugInfo.h"
+#include "widget/board/base/statusTest.h"
+#include "widget/board/base/statusMore.h"
+#include "widget/board/base/widgetDebugInfo.h"
 
 namespace Ui {
 class WidgetTest;
@@ -17,7 +17,6 @@ class WidgetTest : public QWidget
 public:
     explicit WidgetTest(QWidget *parent = 0);
     ~WidgetTest();
-    void start_test();
 
 signals:
 
@@ -29,7 +28,7 @@ private slots:
     void slot_testUSB_result(int, QString);
     void slot_testVOL_result(int, QString);
     void slot_testMIIO_result(int, QString);
-    void slot_syncTest_result(int, QString);
+    void slot_testSYNC_result(int, QString);
 
     void slot_testCPU_debugInfo();
     void slot_testRTC_debugInfo();
@@ -38,7 +37,9 @@ private slots:
     void slot_testUSB_debugInfo();
     void slot_testVOL_debugInfo();
     void slot_testMIIO_debugInfo();
-    void slot_syncTest_debugInfo();
+    void slot_testSYNC_debugInfo();
+
+    void slot_test_init();
 
 private:
     void data_init();

@@ -20,7 +20,7 @@ public:
     explicit ServerSync(QObject *parent = 0);
 
 signals:
-    void signal_syncTest_success();
+    void signal_syncTest_success(QString);
     void signal_syncTest_failed(QString);
 
 
@@ -36,6 +36,7 @@ private slots:
 private:
     QString session;
     QString name;
+    QString requestData;
 
 };
 

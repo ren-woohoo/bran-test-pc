@@ -5,7 +5,7 @@
 #include <QMessageBox>
 #include <QStyledItemDelegate>
 #include "file/fileConfig.h"
-#include "system/sysData.h"
+#include "control/sysData.h"
 
 namespace Ui {
 class WidgetSetting;

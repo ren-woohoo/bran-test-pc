@@ -3,9 +3,7 @@
 
 #include <QWidget>
 #include <QTimer>
-#include "base/widgetTestItem.h"
-#include "serial/serialControl.h"
-#include "device/deviceControl.h"
+#include "board/testControl.h"
 
 namespace Ui {
 class WidgetControl;
@@ -19,18 +17,18 @@ public:
     explicit WidgetControl(QWidget *parent = 0);
     ~WidgetControl();
 
+signals:
+    void signal_start_test();
+    void signal_close_ports();
+
 private slots:
     void slot_add_devices(QList<QString>);
     void slot_delete_devices(QList<QString>);
     void slot_add_ports(QList<QString>);
     void slot_delete_ports(QList<QString>);
-
-    void slot_match_device(QString);
-
-    void on_button_start_clicked();
-
-    void slot_verify_device();
+    void slot_refresh_cache();
     void slot_test_end();
+    void on_button_start_clicked();
 
 private:
     void data_init();
@@ -39,17 +37,18 @@ private:
 private:
     Ui::WidgetControl *ui;
 
-    WidgetTestItem *widgetTestItem1;
-    WidgetTestItem *widgetTestItem2;
-    WidgetTestItem *widgetTestItem3;
-    WidgetTestItem *widgetTestItem4;
-    WidgetTestItem *widgetTestItem5;
-    WidgetTestItem *widgetTestItem6;
+    TestControl *testItem1;
+    TestControl *testItem2;
+    TestControl *testItem3;
+    TestControl *testItem4;
+    TestControl *testItem5;
+    TestControl *testItem6;
 
-    QList<WidgetTestItem*> listTestItem;
+    QList<TestControl*> listTestItem;
     QList<QString> listDevicesCache;
+    QList<QString> listPortsCache;
 
-    QTimer *timerVerify;
+    QTimer *timerRefresh;
 
 };
 

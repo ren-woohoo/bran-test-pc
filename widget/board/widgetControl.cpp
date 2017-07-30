@@ -25,22 +25,32 @@ WidgetControl::~WidgetControl()
 *******************************************************************************/
 void WidgetControl::data_init()
 {
-    widgetTestItem1 = new WidgetTestItem(ui->widget_1);
-    widgetTestItem2 = new WidgetTestItem(ui->widget_2);
-    widgetTestItem3 = new WidgetTestItem(ui->widget_3);
-    widgetTestItem4 = new WidgetTestItem(ui->widget_4);
-    widgetTestItem5 = new WidgetTestItem(ui->widget_5);
-    widgetTestItem6 = new WidgetTestItem(ui->widget_6);
+    testItem1 = new TestControl(ui->widget_1);
+    testItem2 = new TestControl(ui->widget_2);
+    testItem3 = new TestControl(ui->widget_3);
+    testItem4 = new TestControl(ui->widget_4);
+    testItem5 = new TestControl(ui->widget_5);
+    testItem6 = new TestControl(ui->widget_6);
 
-    listTestItem.append(widgetTestItem1);
-    listTestItem.append(widgetTestItem2);
-    listTestItem.append(widgetTestItem3);
-    listTestItem.append(widgetTestItem4);
-    listTestItem.append(widgetTestItem5);
-    listTestItem.append(widgetTestItem6);
+    listTestItem.append(testItem1);
+    listTestItem.append(testItem2);
+    listTestItem.append(testItem3);
+    listTestItem.append(testItem4);
+    listTestItem.append(testItem5);
+    listTestItem.append(testItem6);
 
-    timerVerify = new QTimer();
-    timerVerify->setInterval(1000);
+    testItem1->start();
+    testItem2->start();
+    testItem3->start();
+    testItem4->start();
+    testItem5->start();
+    testItem6->start();
+
+    timerRefresh = new QTimer();
+    timerRefresh->setSingleShot(true);
+    timerRefresh->setInterval(3000);
+
+    ui->button_start->setEnabled(false);
 }
 
 /*******************************************************************************
@@ -52,41 +62,29 @@ void WidgetControl::data_init()
 *******************************************************************************/
 void WidgetControl::connect_init()
 {
-    connect(widgetTestItem1, SIGNAL(signal_match_device(QString)), this, SLOT(slot_match_device(QString)));
-    connect(widgetTestItem2, SIGNAL(signal_match_device(QString)), this, SLOT(slot_match_device(QString)));
-    connect(widgetTestItem3, SIGNAL(signal_match_device(QString)), this, SLOT(slot_match_device(QString)));
-    connect(widgetTestItem4, SIGNAL(signal_match_device(QString)), this, SLOT(slot_match_device(QString)));
-    connect(widgetTestItem5, SIGNAL(signal_match_device(QString)), this, SLOT(slot_match_device(QString)));
-    connect(widgetTestItem6, SIGNAL(signal_match_device(QString)), this, SLOT(slot_match_device(QString)));
 
-    connect(widgetTestItem1, SIGNAL(signal_test_end()), this, SLOT(slot_test_end()));
-    connect(widgetTestItem2, SIGNAL(signal_test_end()), this, SLOT(slot_test_end()));
-    connect(widgetTestItem3, SIGNAL(signal_test_end()), this, SLOT(slot_test_end()));
-    connect(widgetTestItem4, SIGNAL(signal_test_end()), this, SLOT(slot_test_end()));
-    connect(widgetTestItem5, SIGNAL(signal_test_end()), this, SLOT(slot_test_end()));
-    connect(widgetTestItem6, SIGNAL(signal_test_end()), this, SLOT(slot_test_end()));
+    connect(testItem1, SIGNAL(signal_test_end()), this, SLOT(slot_test_end()));
+    connect(testItem2, SIGNAL(signal_test_end()), this, SLOT(slot_test_end()));
+    connect(testItem3, SIGNAL(signal_test_end()), this, SLOT(slot_test_end()));
+    connect(testItem4, SIGNAL(signal_test_end()), this, SLOT(slot_test_end()));
+    connect(testItem5, SIGNAL(signal_test_end()), this, SLOT(slot_test_end()));
+    connect(testItem6, SIGNAL(signal_test_end()), this, SLOT(slot_test_end()));
 
-    connect(timerVerify, SIGNAL(timeout()), this, SLOT(slot_verify_device()));
-}
+    connect(this, SIGNAL(signal_start_test()), testItem1, SLOT(slot_start_test()));
+    connect(this, SIGNAL(signal_start_test()), testItem2, SLOT(slot_start_test()));
+    connect(this, SIGNAL(signal_start_test()), testItem3, SLOT(slot_start_test()));
+    connect(this, SIGNAL(signal_start_test()), testItem4, SLOT(slot_start_test()));
+    connect(this, SIGNAL(signal_start_test()), testItem5, SLOT(slot_start_test()));
+    connect(this, SIGNAL(signal_start_test()), testItem6, SLOT(slot_start_test()));
 
-/*******************************************************************************
-* Function Name  :  slot_test_end
-* Description    :  检测结束
-* Input          :  None
-* Output         :  None
-* Return         :  None
-*******************************************************************************/
-void WidgetControl::slot_test_end()
-{
-    for(int i = 0; i < listTestItem.length(); ++i)
-    {
-        // 若此时还有检测项
-        if(listTestItem.at(i)->get_status() == STAGE_TESTING)
-        {
-            return;
-        }
-    }
-    ui->button_start->setEnabled(true);
+    connect(this, SIGNAL(signal_close_ports()), testItem1, SLOT(slot_close_ports()), Qt::DirectConnection);
+    connect(this, SIGNAL(signal_close_ports()), testItem2, SLOT(slot_close_ports()), Qt::DirectConnection);
+    connect(this, SIGNAL(signal_close_ports()), testItem3, SLOT(slot_close_ports()), Qt::DirectConnection);
+    connect(this, SIGNAL(signal_close_ports()), testItem4, SLOT(slot_close_ports()), Qt::DirectConnection);
+    connect(this, SIGNAL(signal_close_ports()), testItem5, SLOT(slot_close_ports()), Qt::DirectConnection);
+    connect(this, SIGNAL(signal_close_ports()), testItem6, SLOT(slot_close_ports()), Qt::DirectConnection);
+
+    connect(timerRefresh, SIGNAL(timeout()), this, SLOT(slot_refresh_cache()));
 }
 
 /*******************************************************************************
@@ -98,23 +96,14 @@ void WidgetControl::slot_test_end()
 *******************************************************************************/
 void WidgetControl::slot_add_ports(QList<QString> listPorts)
 {
-    // 循环此时的检测项目组
-    for(int i = 0; i < listTestItem.length(); ++i)
+    for(int j = 0; j < listPorts.length(); ++j)
     {
-        // 若此时的检测项是空闲的
-        if(listTestItem.at(i)->get_status() == FREE)
+        if(!listPortsCache.contains(listPorts.at(j)))
         {
-            // 取出一个串口安置进去
-            listTestItem.at(i)->load_fixture(listPorts.at(0));
-            listPorts.pop_front();
-
-            // 若可用没有串口了，结束循环，退出
-            if(listPorts.isEmpty())
-            {
-                return;
-            }
+            listPortsCache.append(listPorts.at(j));
         }
     }
+    slot_refresh_cache();
 }
 
 /*******************************************************************************
@@ -126,22 +115,44 @@ void WidgetControl::slot_add_ports(QList<QString> listPorts)
 *******************************************************************************/
 void WidgetControl::slot_delete_ports(QList<QString> listPorts)
 {
+    for(int j = 0; j < listPorts.length(); ++j)
+    {
+        if(!listPortsCache.contains(listPorts.at(j)))
+        {
+            listPortsCache.removeOne(listPorts.at(j));
+        }
+    }
+
     // 循环此时的检测项目
-    for(int i = 0; i < listTestItem.length(); ++i)
+    for(int i = 0; i < listTestItem.length();++i)
     {
         // 若检测项目已安置检测项
-        if(listTestItem.at(i)->get_status() > FREE)
+        if(IS_FREE != listTestItem.at(i)->testStage)
         {
             // 循环此时移除的串口列表
-            for(int j = 0; j < listPorts.length(); ++j)
+            for(int j = 0; j < listPorts.length();)
             {
                 // 若检测项目的串口已被移除
-                if(listTestItem.at(i)->get_fixture() == listPorts.at(j))
+                if(listTestItem.at(i)->get_port() == listPorts.at(j))
                 {
                     // 重置检测项
-
-                    listTestItem.at(i)->remove_fixture();
+                    listTestItem.at(i)->remove_port();
                     listPorts.removeAt(i);
+                    ui->button_start->setEnabled(false);
+                    for(int m = 0; m < listTestItem.length(); ++m)
+                    {
+                        if(IS_MATCHED == listTestItem.at(m)->testStage)
+                        {
+                            ui->button_start->setEnabled(true);
+                        }
+                    }
+                    for(int n = 0; n < listTestItem.length(); ++n)
+                    {
+                        if(IS_TESTING == listTestItem.at(n)->testStage)
+                        {
+                            ui->button_start->setEnabled(false);
+                        }
+                    }
 
                     // 若已没有其他移除项，返回，若还有，继续循环
                     if(listPorts.isEmpty())
@@ -152,6 +163,10 @@ void WidgetControl::slot_delete_ports(QList<QString> listPorts)
                     {
                         break;
                     }
+                }
+                else
+                {
+                    ++j;
                 }
             }
         }
@@ -173,19 +188,9 @@ void WidgetControl::slot_add_devices(QList<QString> listDevices)
         if(!listDevicesCache.contains(listDevices.at(j)))
         {
             listDevicesCache.append(listDevices.at(j));
-            timerVerify->start();
         }
     }
-
-    // 所有加载了治具的检测项且没有连接到设备的，检测一次设备做出匹配
-    for(int i = 0; i < listTestItem.length(); ++i)
-    {
-        if((listTestItem.at(i)->get_status() == CONNECTED) || (listTestItem.at(i)->get_status() == READY))
-        {
-            // 检测一次设备
-            listTestItem.at(i)->sample_device();
-        }
-    }
+    slot_refresh_cache();
 }
 
 /*******************************************************************************
@@ -197,96 +202,123 @@ void WidgetControl::slot_add_devices(QList<QString> listDevices)
 *******************************************************************************/
 void WidgetControl::slot_delete_devices(QList<QString> listDevices)
 {
+    for(int i = 0; i < listDevices.length();)
+    {
+        if(listDevicesCache.contains(listDevices.at(i)))
+        {
+            listDevicesCache.removeOne(listDevices.at(i));
+        }
+        else
+        {
+            ++i;
+        }
+    }
     for(int i = 0; i < listTestItem.length(); ++i)
     {
-        qDebug()<<listTestItem.at(i)->get_status();
-        if(listTestItem.at(i)->get_status() >= MATCHED)
+        if((IS_MATCHED == listTestItem.at(i)->testStage) || (IS_TESTING == listTestItem.at(i)->testStage))
         {
-            for(int j = 0; j < listDevices.length(); ++j)
+            for(int j = 0; j < listDevices.length();)
             {
                 if(listTestItem.at(i)->get_device() == listDevices.at(j))
                 {
                     // 移除设备
                     listTestItem.at(i)->remove_device();
+                    ui->button_start->setEnabled(false);
+                    for(int m = 0; m < listTestItem.length(); ++m)
+                    {
+                        if(IS_MATCHED == listTestItem.at(m)->testStage)
+                        {
+                            ui->button_start->setEnabled(true);
+                        }
+                    }
+                    for(int n = 0; n < listTestItem.length(); ++n)
+                    {
+                        if(IS_TESTING == listTestItem.at(n)->testStage)
+                        {
+                            ui->button_start->setEnabled(false);
+                        }
+                    }
                     listDevices.removeAt(j);
+                }
+                else
+                {
+                    ++j;
                 }
             }
         }
     }
-    for(int m = 0; m < listDevices.length(); ++m)
+}
+
+/*******************************************************************************
+* Function Name  :  slot_refresh_cache
+* Description    :  刷新缓存
+* Input          :  None
+* Output         :  None
+* Return         :  None
+*******************************************************************************/
+void WidgetControl::slot_refresh_cache()
+{
+    qDebug()<<"RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR";
+    if(!listPortsCache.isEmpty())
     {
-        if(listDevicesCache.contains(listDevices.at(m)))
+        for(int i = 0; i < listTestItem.length(); ++i)
         {
-            listDevicesCache.removeOne(listDevices.at(m));
-            if(listDevicesCache.isEmpty())
+            // 若此时的检测项是空闲的
+            if(IS_FREE == listTestItem.at(i)->testStage)
             {
-                timerVerify->stop();
+                // 取出一个串口安置进去
+                listTestItem.at(i)->load_port(listPortsCache.at(0));
+                listPortsCache.pop_front();
+
+                // 若可用没有串口了，结束循环，退出
+                if(listPortsCache.isEmpty())
+                {
+                    break;
+                }
             }
         }
     }
-}
-
-/*******************************************************************************
-* Function Name  :  slot_verify_device
-* Description    :  验证设备
-* Input          :  None
-* Output         :  None
-* Return         :  None
-*******************************************************************************/
-void WidgetControl::slot_verify_device()
-{
-    if(listDevicesCache.isEmpty())
+    if(!listDevicesCache.isEmpty())
     {
-        timerVerify->stop();
-        return;
-    }
-
-    // 所有加载了治具的检测项且没有连接到设备的，检测一次设备做出匹配
-    for(int i = 0; i < listTestItem.length(); ++i)
-    {
-        if((listTestItem.at(i)->get_status() == CONNECTED) || (listTestItem.at(i)->get_status() == READY))
+        for(int i = 0; i < listTestItem.length(); ++i)
         {
-            // 检测一次设备
-            listTestItem.at(i)->sample_device();
-        }
-    }
-}
-
-/*******************************************************************************
-* Function Name  :  slot_match_device
-* Description    :  匹配设备
-* Input          :  None
-* Output         :  None
-* Return         :  None
-*******************************************************************************/
-void WidgetControl::slot_match_device(QString deviceSN)
-{
-    qDebug()<<deviceSN;
-    QString sn;
-    for(int i = 0; i < listDevicesCache.length(); ++i)
-    {
-        sn = listDevicesCache.at(i);
-        sn = sn.mid(8,7);
-        if(deviceSN.contains(sn))
-        {
-            for(int j = 0; j < listTestItem.length(); ++j)
+            if(IS_DEVICE_READY == listTestItem.at(i)->testStage)
             {
-                qDebug()<<j<<listTestItem.at(j)->get_status();
-                if(listTestItem.at(j)->get_status() == READY)
+                for(int j = 0; j < listDevicesCache.length(); ++j)
                 {
-                    if(listTestItem.at(j)->get_deviceSN() == deviceSN)
+                    if(listTestItem.at(i)->get_deviceSN().contains(listDevicesCache.at(j).mid(8,7)))
                     {
-                        listTestItem.at(j)->load_device(listDevicesCache.at(i));
-                        listDevicesCache.removeAt(i);
-                        if(listDevicesCache.isEmpty())
+                        listTestItem.at(i)->load_deviceADB(listDevicesCache.at(j));
+                        ui->button_start->setEnabled(true);
+                        for(int m = 0; m < listTestItem.length(); ++m)
                         {
-                            timerVerify->stop();
+                            if(IS_TESTING == listTestItem.at(m)->testStage)
+                            {
+                                ui->button_start->setEnabled(false);
+                            }
                         }
-                        return;
+                        listDevicesCache.removeAt(j);
+                        break;
                     }
                 }
             }
+            else if(IS_FIXTURE_READY == listTestItem.at(i)->testStage)
+            {
+                if(!listDevicesCache.isEmpty())
+                {
+                    listTestItem.at(i)->sampling_deviceSN();
+                }
+            }
         }
+    }
+
+    if(listDevicesCache.isEmpty() && listPortsCache.isEmpty())
+    {
+        timerRefresh->stop();
+    }
+    else
+    {
+        timerRefresh->start();
     }
 }
 
@@ -299,14 +331,25 @@ void WidgetControl::slot_match_device(QString deviceSN)
 *******************************************************************************/
 void WidgetControl::on_button_start_clicked()
 {
-    for(int i =0; i < listTestItem.length(); ++i)
+    emit signal_start_test();
+    ui->button_start->setEnabled(false);
+}
+
+/*******************************************************************************
+* Function Name  :  slot_test_end
+* Description    :  检测结束
+* Input          :  None
+* Output         :  None
+* Return         :  None
+*******************************************************************************/
+void WidgetControl::slot_test_end()
+{
+    for(int i = 0; i < listTestItem.length(); ++i)
     {
-        // 若治具已做到匹配
-        if((listTestItem.at(i)->get_status() == MATCHED) || (listTestItem.at(i)->get_status() == STAGE_TESTED))
+        if(listTestItem.at(i)->testStage == IS_TESTING)
         {
-            // 则开始检测
-            listTestItem.at(i)->start_test();
-            ui->button_start->setEnabled(false);
+            return;
         }
     }
+    ui->button_start->setEnabled(true);
 }

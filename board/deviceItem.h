@@ -3,6 +3,7 @@
 
 #include <QProcess>
 #include <QDebug>
+#include <stdio.h>
 
 enum adbCMD
 {

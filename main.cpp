@@ -1,7 +1,7 @@
-﻿#include "widgetMain.h"
+﻿#include "widget/widgetMain.h"
 #include <QApplication>
 #include <QTextCodec>
-#include "widget/base/widgetDebugInfo.h"
+#include <windows.h>
 
 #if _MSC_VER >= 1600
 #pragma execution_character_set("utf-8")
@@ -19,5 +19,8 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     WidgetMain w;
     w.show();
+    QString data = "43470d54653737420472033656e736f72054572726f720747";
+    data = QString(QByteArray::fromHex(data.toLatin1()));
+    qDebug()<<data;
     return a.exec();
 }

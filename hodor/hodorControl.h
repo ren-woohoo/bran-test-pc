@@ -6,7 +6,7 @@
 #include <QString>
 #include <QStringList>
 #include <QTimer>
-#include "device/deviceItem.h"
+#include "board/deviceItem.h"
 #include "server/serverHodor.h"
 #include "server/serverUser.h"
 #include "globaldefine.h"

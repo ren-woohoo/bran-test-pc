@@ -4,7 +4,7 @@
 #include <QWidget>
 #include "hodor/hodorControl.h"
 #include "globaldefine.h"
-#include "base/statusTest.h"
+#include "widget/board/base/statusTest.h"
 
 namespace Ui {
 class WidgetHodor;
