@@ -32,9 +32,6 @@
 #define DEVICE_DID          "did"
 #define DEVICE_KEY          "key"
 
-#define COMMAND_DEVICE_1    QString("%1 /bin/qtapp/").arg(SHELL_DEVICE_PATH)
-#define COMMAND_DEVICE_2    QString("chmod 777 /bin/qtapp/%1").arg(SHELL_DEVICE_NAME)
-#define COMMAND_DEVICE_3    QString("/bin/qtapp/%1").arg(SHELL_DEVICE_NAME)
 
 enum CommandType
 {
@@ -112,7 +109,7 @@ typedef struct infoMiio
     }
     bool isEmpty()
     {
-        if((mac == "") || (did == "") || (key == ""))
+        if((mac.length() != 17) || (did.length() != 8) || (key.length() <= 0))
         {
             return true;
         }
@@ -168,11 +165,24 @@ typedef struct infoFixture
 
 typedef struct infoDevice
 {
-    QString adb;
-    QString did;
-    QString mac;
-    QString key;
-    QString sn;
+    QString deviceADB;
+    QString deviceSN;
+    InfoMIIO infoMiio;
+
+    void clear()
+    {
+        deviceADB.clear();
+        deviceSN.clear();
+        infoMiio.clear();
+    }
+    bool isEmpty()
+    {
+        if(deviceADB.isEmpty() || deviceSN.isEmpty() || infoMiio.isEmpty())
+        {
+            return true;
+        }
+        return false;
+    }
 
 }InfoDevice;
 

@@ -32,8 +32,8 @@ signals:
     void signal_remove_device();
     void signal_sync_testPassed(InfoDevice, InfoHodor);
     void signal_sync_testFailed(InfoDevice, InfoHodor);
-    void signal_syncTest_success();
-    void signal_syncTest_failed(QString);
+    void signal_syncTest_success(QString, QString);
+    void signal_syncTest_failed(QString, QString);
 
 private slots:
     void slot_add_devices(QList<QString>);

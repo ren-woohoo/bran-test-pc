@@ -39,9 +39,9 @@ void NetworkManager::get_request(QNetworkRequest request)
             if (reply->error() != QNetworkReply::NoError)
             {
                 qDebug()<<QNetworkReply::NoError;
-                qDebug() << "Error String : " << reply->errorString();
-                qDebug()<<reply->readAll();
                 data = reply->readAll();
+                qDebug()<< "Error String : " << reply->errorString();
+                qDebug()<<data;
                 replyData.prepend(data);
                 emit signal_request_failed(replyData);
                 return;
@@ -101,9 +101,9 @@ void NetworkManager::post_request(QNetworkRequest request, QByteArray postData)
             timer->stop();
             if (reply->error() != QNetworkReply::NoError)
             {
-                qDebug() << "Error String : " << reply->errorString();
-                qDebug()<<reply->readAll();
                 data = reply->readAll();
+                qDebug()<< "Error String : " << reply->errorString();
+                qDebug()<<data;
                 replyData.prepend(data);
                 emit signal_request_failed(replyData);
                 return;

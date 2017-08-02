@@ -20,8 +20,8 @@ public:
     explicit ServerHodor(QObject *parent = 0);
 
 signals:
-    void signal_syncTest_success();
-    void signal_syncTest_failed(QString);
+    void signal_syncTest_success(QString,QString);
+    void signal_syncTest_failed(QString,QString);
 
 
 private slots:
@@ -36,6 +36,8 @@ private slots:
 private:
     QString session;
     QString name;
+
+    QString requestData;
 };
 
 #endif // SERVERHODOR_H

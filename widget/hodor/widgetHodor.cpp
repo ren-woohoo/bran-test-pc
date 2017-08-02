@@ -82,8 +82,8 @@ void WidgetHodor::connect_init()
 
     connect(hodorControl, SIGNAL(signal_update_device(InfoDevice,InfoHodor)), this, SLOT(slot_update_device(InfoDevice,InfoHodor)));
     connect(hodorControl, SIGNAL(signal_remove_device()), this, SLOT(slot_remove_device()));
-    connect(hodorControl, SIGNAL(signal_syncTest_success()), this, SLOT(slot_syncTest_success()));
-    connect(hodorControl, SIGNAL(signal_syncTest_failed(QString)), this, SLOT(slot_syncTest_failed(QString)));
+    connect(hodorControl, SIGNAL(signal_syncTest_success(QString, QString)), this, SLOT(slot_syncTest_success(QString, QString)));
+    connect(hodorControl, SIGNAL(signal_syncTest_failed(QString, QString)), this, SLOT(slot_syncTest_failed(QString, QString)));
 }
 
 /*******************************************************************************
@@ -95,6 +95,8 @@ void WidgetHodor::connect_init()
 *******************************************************************************/
 void WidgetHodor::slot_remove_device()
 {
+    ui->edit_ack->clear();
+    ui->edit_req->clear();
     ui->button_sync->setEnabled(false);
     ui->label_adb->setText("UNKNOWN");
     ui->label_did->setText("UNKNOWN");
@@ -123,12 +125,14 @@ void WidgetHodor::slot_remove_device()
 *******************************************************************************/
 void WidgetHodor::slot_update_device(InfoDevice infoDevice, InfoHodor infoHodor)
 {
+    ui->edit_ack->clear();
+    ui->edit_req->clear();
     ui->button_sync->setEnabled(true);
-    ui->label_adb->setText(infoDevice.adb);
-    ui->label_did->setText(infoDevice.did);
-    ui->label_key->setText(infoDevice.key);
-    ui->label_mac->setText(infoDevice.mac);
-    ui->label_sn->setText(infoDevice.sn);
+    ui->label_adb->setText(infoDevice.deviceADB);
+    ui->label_did->setText(infoDevice.infoMiio.did);
+    ui->label_key->setText(infoDevice.infoMiio.key);
+    ui->label_mac->setText(infoDevice.infoMiio.mac);
+    ui->label_sn->setText(infoDevice.deviceSN);
     if(infoHodor.tempHumi)
     {
         statusTest1->set_status(SUCCESS);
@@ -213,19 +217,25 @@ void WidgetHodor::slot_update_device(InfoDevice infoDevice, InfoHodor infoHodor)
 *******************************************************************************/
 void WidgetHodor::on_button_sync_clicked()
 {
+    ui->edit_req->clear();
+    ui->edit_ack->clear();
     ui->stackedWidget_result->setCurrentWidget(ui->page_normal);
     emit signal_sync_hodor();
     ui->button_sync->setEnabled(false);
 }
 
-void WidgetHodor::slot_syncTest_success()
+void WidgetHodor::slot_syncTest_success(QString request, QString reply)
 {
+    ui->edit_req->setText(request);
+    ui->edit_ack->setText(reply);
     ui->stackedWidget_result->setCurrentWidget(ui->page_success);
     ui->button_sync->setEnabled(true);
 }
 
-void WidgetHodor::slot_syncTest_failed(QString)
+void WidgetHodor::slot_syncTest_failed(QString request, QString reply)
 {
+    ui->edit_req->setText(request);
+    ui->edit_ack->setText(reply);
     ui->stackedWidget_result->setCurrentWidget(ui->page_failed);
     ui->button_sync->setEnabled(true);
 }

@@ -25,8 +25,8 @@ private slots:
     void on_button_sync_clicked();
     void slot_update_device(InfoDevice, InfoHodor);
     void slot_remove_device();
-    void slot_syncTest_success();
-    void slot_syncTest_failed(QString);
+    void slot_syncTest_success(QString,QString);
+    void slot_syncTest_failed(QString,QString);
 
 private:
     void data_init();

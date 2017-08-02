@@ -30,8 +30,10 @@ void ServerHodor::slot_sync_testPassed(InfoDevice infoDevice,InfoHodor infoHodor
     request.setHeader(QNetworkRequest::ContentTypeHeader,"application/json");
     request.setRawHeader("Username", name.toLatin1());
     request.setRawHeader("User-Session", session.toLatin1());
-    request.setRawHeader("Timestamp", QString::number(QDateTime::currentDateTime().toTime_t()).toLatin1());
-    request.setRawHeader("Encrypted", QString::number(QDateTime::currentDateTime().toTime_t()).toLatin1());
+    QString timestamp = QString::number(QDateTime::currentDateTime().toTime_t());
+    QString encrypted = networkManage->encrypted_string(timestamp);
+    request.setRawHeader("Timestamp", timestamp.toLatin1());
+    request.setRawHeader("Encrypted", encrypted.toLatin1());
     request.setRawHeader("Version", QString(VERSION).toLatin1());
     request.setRawHeader("Api-Version", QString("1").toLatin1());
     request.setRawHeader("Client", QString("pc").toLatin1());
@@ -39,16 +41,16 @@ void ServerHodor::slot_sync_testPassed(InfoDevice infoDevice,InfoHodor infoHodor
 #ifdef TEST_MODE
     request.setRawHeader("test-db", "1");
 #endif
-    QString str = QString(URL_SERVER) + QString(REQUEST_HODOR_TEST_PASS) + QString("/%1").arg(infoDevice.mac);
+    QString str = QString(URL_SERVER) + QString(REQUEST_HODOR_TEST_PASS) + QString("/%1").arg(infoDevice.infoMiio.mac);
     QUrl url = QUrl::fromEncoded(str.toLatin1());
     request.setUrl(url);
 
     QJsonObject test;
     QJsonObject obj;
-    obj.insert("sn",infoDevice.sn);
-    obj.insert("did",infoDevice.did);
-    obj.insert("mac",infoDevice.mac);
-    obj.insert("key",infoDevice.key);
+    obj.insert("sn",infoDevice.deviceSN);
+    obj.insert("did",infoDevice.infoMiio.did);
+    obj.insert("mac",infoDevice.infoMiio.mac);
+    obj.insert("key",infoDevice.infoMiio.key);
     obj.insert("pm25",infoHodor.pm25);
     obj.insert("temp_humi",infoHodor.tempHumi);
     obj.insert("tvoc_co2e",infoHodor.tvocCo2e);
@@ -61,7 +63,7 @@ void ServerHodor::slot_sync_testPassed(InfoDevice infoDevice,InfoHodor infoHodor
     test.insert("test_data",obj);
     QJsonDocument document;
     document.setObject(test);
-    qDebug()<<"##################"<<document.toJson();
+    requestData = QString("url:%1\ndata:%2").arg(str).arg(QString(document.toJson()));
     networkManage->post_request(request,document.toJson());
 }
 
@@ -94,16 +96,16 @@ void ServerHodor::slot_sync_testFailed(InfoDevice infoDevice,InfoHodor infoHodor
 #ifdef TEST_MODE
     request.setRawHeader("test-db", "1");
 #endif
-    QString str = QString(URL_SERVER) + QString(REQUEST_HODOR_TEST_FAILED) + QString("/%1").arg(infoDevice.mac);
+    QString str = QString(URL_SERVER) + QString(REQUEST_HODOR_TEST_FAILED) + QString("/%1").arg(infoDevice.infoMiio.mac);
     QUrl url = QUrl::fromEncoded(str.toLatin1());
     request.setUrl(url);
 
     QJsonObject test;
     QJsonObject obj;
-    obj.insert("sn",infoDevice.sn);
-    obj.insert("did",infoDevice.did);
-    obj.insert("mac",infoDevice.mac);
-    obj.insert("key",infoDevice.key);
+    obj.insert("sn",infoDevice.deviceSN);
+    obj.insert("did",infoDevice.infoMiio.did);
+    obj.insert("mac",infoDevice.infoMiio.mac);
+    obj.insert("key",infoDevice.infoMiio.key);
     obj.insert("pm25",infoHodor.pm25);
     obj.insert("temp_humi",infoHodor.tempHumi);
     obj.insert("tvoc_co2e",infoHodor.tvocCo2e);
@@ -116,6 +118,7 @@ void ServerHodor::slot_sync_testFailed(InfoDevice infoDevice,InfoHodor infoHodor
     test.insert("test_data",obj);
     QJsonDocument document;
     document.setObject(test);
+    requestData = QString("url:%1\ndata:%2").arg(str).arg(QString(document.toJson()));
     networkManage->post_request(request,document.toJson());
 }
 
@@ -128,7 +131,6 @@ void ServerHodor::slot_sync_testFailed(InfoDevice infoDevice,InfoHodor infoHodor
 *******************************************************************************/
 void ServerHodor::slot_syncTest_success(QString replyData)
 {
-    qDebug()<<replyData;
     QByteArray ba = replyData.toLatin1();
     QJsonParseError jsonError;
     QJsonDocument doucment = QJsonDocument::fromJson(ba, &jsonError);
@@ -144,34 +146,34 @@ void ServerHodor::slot_syncTest_success(QString replyData)
                 {
                     if(codeValue.toVariant().toInt() != 0)
                     {
-                        emit signal_syncTest_failed(replyData);
+                        emit signal_syncTest_failed(requestData, replyData);
                         return;
                     }
                     else
                     {
-                        emit signal_syncTest_success();
+                        emit signal_syncTest_success(requestData, replyData);
                     }
                 }
                 else
                 {
-                    emit signal_syncTest_failed(replyData);
+                    emit signal_syncTest_failed(requestData, replyData);
                     return;
                 }
             }
             else
             {
-                emit signal_syncTest_failed(replyData);
+                emit signal_syncTest_failed(requestData, replyData);
                 return;
             }
         }
         else
         {
-            emit signal_syncTest_failed(replyData);
+            emit signal_syncTest_failed(requestData, replyData);
         }
     }
     else
     {
-        emit signal_syncTest_failed(replyData);
+        emit signal_syncTest_failed(requestData, replyData);
     }
 }
 
@@ -184,7 +186,7 @@ void ServerHodor::slot_syncTest_success(QString replyData)
 *******************************************************************************/
 void ServerHodor::slot_syncTest_failed(QString replyData)
 {
-    emit signal_syncTest_failed(replyData);
+    emit signal_syncTest_failed(requestData, replyData);
 }
 
 /*******************************************************************************
@@ -196,7 +198,7 @@ void ServerHodor::slot_syncTest_failed(QString replyData)
 *******************************************************************************/
 void ServerHodor::slot_syncTest_timeout()
 {
-    emit signal_syncTest_failed("TIME OUT");
+    emit signal_syncTest_failed(requestData, "TIME OUT");
 }
 
 /*******************************************************************************

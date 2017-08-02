@@ -68,10 +68,12 @@ void HodorControl::connect_init()
 {
     connect(serverUser, SIGNAL(signal_update_user(QString,QString)), serverHodor, SLOT(slot_update_user(QString,QString)));
     connect(timer, SIGNAL(timeout()), this, SLOT(slot_refresh_device()));
+
     connect(this, SIGNAL(signal_sync_testPassed(InfoDevice,InfoHodor)), serverHodor, SLOT(slot_sync_testPassed(InfoDevice,InfoHodor)));
     connect(this, SIGNAL(signal_sync_testFailed(InfoDevice,InfoHodor)), serverHodor, SLOT(slot_sync_testFailed(InfoDevice,InfoHodor)));
-    connect(serverHodor, SIGNAL(signal_syncTest_failed(QString)),this, SIGNAL(signal_syncTest_failed(QString)));
-    connect(serverHodor, SIGNAL(signal_syncTest_success()), this, SIGNAL(signal_syncTest_success()));
+
+    connect(serverHodor, SIGNAL(signal_syncTest_failed(QString, QString)),this, SIGNAL(signal_syncTest_failed(QString, QString)));
+    connect(serverHodor, SIGNAL(signal_syncTest_success(QString, QString)), this, SIGNAL(signal_syncTest_success(QString, QString)));
 }
 
 /*******************************************************************************
@@ -130,7 +132,7 @@ void HodorControl::slot_delete_devices(QList<QString> listDevices)
             listDevicesCache.removeOne(listDevices.at(j));
             if(!isFree)
             {
-                if(listDevices.at(j) == infoDevice.adb)
+                if(listDevices.at(j) == infoDevice.deviceADB)
                 {
                     emit signal_remove_device();
                     isFree = true;
@@ -153,8 +155,10 @@ void HodorControl::slot_refresh_device()
     {
         if(listDevicesCache.length() > 0)
         {
-            refresh_device(listDevicesCache.at(0));
-            isFree = false;
+            if(refresh_device(listDevicesCache.at(0)))
+            {
+                isFree = false;
+            }
         }
     }
 }
@@ -190,10 +194,11 @@ void HodorControl::slot_sync_hodor()
 *******************************************************************************/
 bool HodorControl::refresh_device(QString deviceADB)
 {
-    return true;
+    infoDevice.clear();
     infoHodor.init();
+
     deviceItem->set_device(deviceADB);
-    infoDevice.adb = deviceADB;
+    infoDevice.deviceADB = deviceADB;
     QString result1 = deviceItem->excute_cmd("cat /usr/bin/qtapp/hodor_result.txt");
     QStringList resultList1;
     QString item;
@@ -201,6 +206,10 @@ bool HodorControl::refresh_device(QString deviceADB)
     if(result1.contains("TEST_"))
     {
         resultList1 = (result1.trimmed()).split("\n");
+        if(resultList1.length() < 9)
+        {
+            return false;
+        }
         for(int i = 0; i < resultList1.length(); ++i)
         {
             item = resultList1.at(i);
@@ -285,26 +294,34 @@ bool HodorControl::refresh_device(QString deviceADB)
     {
         return false;
     }
+
     QString result2 = deviceItem->excute_cmd("cat /usr/bin/qtapp/etc/device.conf");
     QStringList resultList2 = result2.split("\n");
     QString row;
-    qDebug()<<result2;
+    if(resultList2.length() < 4)
+    {
+        return false;
+    }
     for(int i = 0; i < resultList2.length(); ++i)
     {
         row = resultList2.at(i);
         row = row.trimmed();
         if(row.contains("did="))
         {
-            infoDevice.did = row.split("=").at(1);
+            infoDevice.infoMiio.did = row.split("=").at(1);
         }
         else if(row.contains("mac="))
         {
-            infoDevice.mac = row.split("=").at(1);
+            infoDevice.infoMiio.mac = row.split("=").at(1);
         }
         else if(row.contains("key="))
         {
-            infoDevice.key = row.split("=").at(1);
+            infoDevice.infoMiio.key = row.split("=").at(1);
         }
+    }
+    if(infoDevice.infoMiio.isEmpty())
+    {
+        return false;
     }
     QString result3 = deviceItem->excute_cmd("cat /proc/cpuinfo");
     QStringList resultList3 = result3.split("\n");
@@ -315,13 +332,18 @@ bool HodorControl::refresh_device(QString deviceADB)
             QStringList strList = resultList3.at(i).split(":");
             if(strList.length() == 2)
             {
-                infoDevice.sn = strList.at(1);
-                infoDevice.sn = infoDevice.sn.trimmed();
+                infoDevice.deviceSN = strList.at(1);
+                infoDevice.deviceSN = infoDevice.deviceSN.trimmed();
             }
         }
     }
-    emit signal_update_device(infoDevice, infoHodor);
-    isFree = false;
-    return true;
+    if(!infoDevice.isEmpty() && (infoDevice.deviceSN.contains(infoDevice.deviceADB.mid(8,7))))
+    {
+        emit signal_update_device(infoDevice, infoHodor);
+    }
+    else
+    {
+        return true;
+    }
 }
 
