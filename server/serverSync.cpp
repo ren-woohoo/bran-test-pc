@@ -69,7 +69,7 @@ void ServerSync::slot_sync_testPassed(InfoTest infoTest)
     test.insert("test_data",obj);
     QJsonDocument document;
     document.setObject(test);
-    requestData = QString(document.toJson());
+    requestData = QString("url:%1\ndata:%2").arg(str).arg(QString(document.toJson()));
     networkManage->post_request(request,document.toJson());
 }
 
@@ -127,7 +127,7 @@ void ServerSync::slot_sync_testFailed(InfoTest infoTest)
     test.insert("test_data",obj);
     QJsonDocument document;
     document.setObject(test);
-    requestData = QString(document.toJson());
+    requestData = QString("url:%1\ndata:%2").arg(str).arg(QString(document.toJson()));
     networkManage->post_request(request,document.toJson());
 }
 
@@ -144,7 +144,6 @@ void ServerSync::slot_syncTest_success(QString replyData)
     QByteArray ba = replyData.toLatin1();
     QJsonParseError jsonError;
     QJsonDocument doucment = QJsonDocument::fromJson(ba, &jsonError);
-    QString result = QString("REQUEST:%1\n, REPLY:%2").arg(requestData).arg(replyData);
     if(jsonError.error == QJsonParseError::NoError)
     {
         if(doucment.isObject())
@@ -157,34 +156,34 @@ void ServerSync::slot_syncTest_success(QString replyData)
                 {
                     if(codeValue.toVariant().toInt() != 0)
                     {
-                        emit signal_syncTest_failed(result);
+                        emit signal_syncTest_failed(requestData, replyData);
                         return;
                     }
                     else
                     {
-                        emit signal_syncTest_success(result);
+                        emit signal_syncTest_success(requestData, replyData);
                     }
                 }
                 else
                 {
-                    emit signal_syncTest_failed(result);
+                    emit signal_syncTest_failed(requestData, replyData);
                     return;
                 }
             }
             else
             {
-                emit signal_syncTest_failed(result);
+                emit signal_syncTest_failed(requestData, replyData);
                 return;
             }
         }
         else
         {
-            emit signal_syncTest_failed(result);
+            emit signal_syncTest_failed(requestData, replyData);
         }
     }
     else
     {
-        emit signal_syncTest_failed(result);
+        emit signal_syncTest_failed(requestData, replyData);
     }
 }
 
@@ -197,8 +196,7 @@ void ServerSync::slot_syncTest_success(QString replyData)
 *******************************************************************************/
 void ServerSync::slot_syncTest_failed(QString replyData)
 {
-    QString result = QString("REQUEST:%1\n, REPLY:%2").arg(requestData).arg(replyData);
-    emit signal_syncTest_failed(result);
+    emit signal_syncTest_failed(requestData, replyData);
 }
 
 /*******************************************************************************
@@ -210,8 +208,7 @@ void ServerSync::slot_syncTest_failed(QString replyData)
 *******************************************************************************/
 void ServerSync::slot_syncTest_timeout()
 {
-    QString result = QString("REQUEST:%1\n, REPLY:TIME OUT").arg(requestData);
-    emit signal_syncTest_failed(result);
+    emit signal_syncTest_failed(requestData, "TIME OUT");
 }
 
 /*******************************************************************************

@@ -20,8 +20,8 @@ public:
     explicit ServerSync(QObject *parent = 0);
 
 signals:
-    void signal_syncTest_success(QString);
-    void signal_syncTest_failed(QString);
+    void signal_syncTest_success(QString, QString);
+    void signal_syncTest_failed(QString, QString);
 
 
 private slots:

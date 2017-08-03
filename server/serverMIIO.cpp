@@ -45,6 +45,7 @@ void ServerMIIO::slot_fetch_mac(QString sn)
     QString str = QString(URL_SERVER) + QString(REQUEST_FETCH_MAC)+QString("?sn=%1").arg(sn);
     QUrl urlMac = QUrl::fromEncoded(str.toLatin1());
     request.setUrl(urlMac);
+    requestData = QString("url:%1\n").arg(str);
     networkManage->get_request(request);
 }
 
@@ -74,19 +75,19 @@ void ServerMIIO::slot_fetch_success(QString replyData)
                 {
                     if(codeValue.toVariant().toInt() != 0)
                     {
-                        emit signal_fetch_failed(replyData);
+                        emit signal_fetch_failed(requestData, replyData);
                         return;
                     }
                 }
                 else
                 {
-                    emit signal_fetch_failed(replyData);
+                    emit signal_fetch_failed(requestData, replyData);
                     return;
                 }
             }
             else
             {
-                emit signal_fetch_failed(replyData);
+                emit signal_fetch_failed(requestData, replyData);
                 return;
             }
 
@@ -99,13 +100,13 @@ void ServerMIIO::slot_fetch_success(QString replyData)
                 }
                 else
                 {
-                    emit signal_fetch_failed(replyData);
+                    emit signal_fetch_failed(requestData, replyData);
                     return;
                 }
             }
             else
             {
-                emit signal_fetch_failed(replyData);
+                emit signal_fetch_failed(requestData, replyData);
                 return;
             }
 
@@ -118,13 +119,13 @@ void ServerMIIO::slot_fetch_success(QString replyData)
                 }
                 else
                 {
-                    emit signal_fetch_failed(replyData);
+                    emit signal_fetch_failed(requestData, replyData);
                     return;
                 }
             }
             else
             {
-                emit signal_fetch_failed(replyData);
+                emit signal_fetch_failed(requestData, replyData);
                 return;
             }
 
@@ -137,26 +138,26 @@ void ServerMIIO::slot_fetch_success(QString replyData)
                 }
                 else
                 {
-                    emit signal_fetch_failed(replyData);
+                    emit signal_fetch_failed(requestData, replyData);
                     return;
                 }
             }
             else
             {
-                emit signal_fetch_failed(replyData);
+                emit signal_fetch_failed(requestData, replyData);
                 return;
             }
-            emit signal_fetch_success(infoMIIO);
+            emit signal_fetch_success(requestData, infoMIIO);
         }
         else
         {
-            emit signal_fetch_failed(replyData);
+            emit signal_fetch_failed(requestData, replyData);
             return;
         }
     }
     else
     {
-        emit signal_fetch_failed(replyData);
+        emit signal_fetch_failed(requestData, replyData);
         return;
     }
 }
@@ -170,12 +171,12 @@ void ServerMIIO::slot_fetch_success(QString replyData)
 *******************************************************************************/
 void ServerMIIO::slot_fetch_failed(QString replyData)
 {
-    emit signal_fetch_failed(replyData);
+    emit signal_fetch_failed(requestData, replyData);
 }
 
 void ServerMIIO::slot_fetch_timeout()
 {
-    emit signal_fetch_failed("TIME OUT");
+    emit signal_fetch_failed(requestData, "TIME OUT");
 }
 
 /*******************************************************************************

@@ -17,8 +17,8 @@ signals:
     void signal_update_infoMIIO(InfoMIIO);
 
 private slots:
-    void slot_getInfoMIIO_success(InfoMIIO);
-    void slot_getInfoMIIO_failed(QString);
+    void slot_getInfoMIIO_success(QString,InfoMIIO);
+    void slot_getInfoMIIO_failed(QString,QString);
 
 private:
     QString deviceSN;

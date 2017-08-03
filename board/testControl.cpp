@@ -40,12 +40,12 @@ void TestControl::data_init()
     serverSync = new ServerSync();
     serverMIIO = new ServerMIIO();
 
+    // serialItem->moveToThread(this);
     deviceItem->moveToThread(this);
-    serialItem->moveToThread(this);
     serverSync->moveToThread(this);
     serverMIIO->moveToThread(this);
 
-    timerRetry = new QTimer();
+    timerRetry = new QTimer(this);
     timerRetry->setInterval(1000);
 
     testCPU = new TestCPU(deviceItem, serialItem);
@@ -103,15 +103,15 @@ void TestControl::connect_init()
 
     connect(testSYNC, SIGNAL(signal_sync_testPassed(InfoTest)), serverSync, SLOT(slot_sync_testPassed(InfoTest)));
     connect(testSYNC, SIGNAL(signal_sync_testFailed(InfoTest)), serverSync, SLOT(slot_sync_testFailed(InfoTest)));
-    connect(serverSync, SIGNAL(signal_syncTest_success(QString)), testSYNC, SLOT(slot_syncTest_success(QString)));
-    connect(serverSync, SIGNAL(signal_syncTest_failed(QString)), testSYNC, SLOT(slot_syncTest_failed(QString)));
+    connect(serverSync, SIGNAL(signal_syncTest_success(QString,QString)), testSYNC, SLOT(slot_syncTest_success(QString,QString)));
+    connect(serverSync, SIGNAL(signal_syncTest_failed(QString,QString)), testSYNC, SLOT(slot_syncTest_failed(QString,QString)));
 
     connect(testVOL, SIGNAL(signal_update_infoVOL(InfoVol)), this, SLOT(slot_update_infoVOL(InfoVol)));
     connect(testMIIO, SIGNAL(signal_update_infoMIIO(InfoMIIO)), this, SLOT(slot_update_infoMIIO(InfoMIIO)));
 
     connect(testMIIO, SIGNAL(signal_get_infoMIIO(QString)), serverMIIO, SLOT(slot_fetch_mac(QString)));
-    connect(serverMIIO, SIGNAL(signal_fetch_success(InfoMIIO)), testMIIO, SLOT(slot_getInfoMIIO_success(InfoMIIO)));
-    connect(serverMIIO, SIGNAL(signal_fetch_failed(QString)), testMIIO, SLOT(slot_getInfoMIIO_failed(QString)));
+    connect(serverMIIO, SIGNAL(signal_fetch_success(QString,InfoMIIO)), testMIIO, SLOT(slot_getInfoMIIO_success(QString,InfoMIIO)));
+    connect(serverMIIO, SIGNAL(signal_fetch_failed(QString,QString)), testMIIO, SLOT(slot_getInfoMIIO_failed(QString,QString)));
 
     connect(this, SIGNAL(signal_test_init()), widgetItem, SLOT(slot_test_init()));
     connect(this, SIGNAL(signal_test_init()), widgetTest, SLOT(slot_test_init()));
@@ -151,6 +151,7 @@ void TestControl::load_port(QString port)
 *******************************************************************************/
 void TestControl::load_fixture(QString id)
 {
+    qDebug()<<"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"<<id;
     testStage = IS_FIXTURE_READY;
     infoTest.infoFixture.id = id;
     emit signal_update_infoFixture(infoTest.infoFixture);
@@ -286,11 +287,16 @@ void TestControl::slot_retry_samplingFixture()
 *******************************************************************************/
 void TestControl::slot_getFixture_feedback(QString replyData, QString data)
 {
-    data = QString(QByteArray::fromHex(data.toLatin1()));
-    if("Fail" != data)
+    QString result = QString(QByteArray::fromHex(data.toLatin1()));
+    QString id;
+    QByteArray ba;
+
+    if("Fail" != result)
     {
+        ba = QCryptographicHash::hash (data.toLatin1(), QCryptographicHash::Md5);
+        id.append(ba.toHex());
         timerRetry->stop();
-        load_fixture(data);
+        load_fixture(id);
     }
 }
 

@@ -15,8 +15,8 @@ signals:
     void signal_sync_testFailed(InfoTest);
 
 private slots:
-    void slot_syncTest_success(QString);
-    void slot_syncTest_failed(QString);
+    void slot_syncTest_success(QString,QString);
+    void slot_syncTest_failed(QString,QString);
 
 };
 

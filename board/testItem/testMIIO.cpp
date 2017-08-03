@@ -33,8 +33,9 @@ void TestMIIO::start_test()
 * Output         :  None
 * Return         :  None
 *******************************************************************************/
-void TestMIIO::slot_getInfoMIIO_success(InfoMIIO infoMIIO)
+void TestMIIO::slot_getInfoMIIO_success(QString requestData,InfoMIIO infoMIIO)
 {
+    debugInfo.append(QString("REQ: %1\n").arg(requestData));
     if(infoMIIO.isEmpty())
     {
         debugInfo.append("MIIO INFO IS EMPTY!!!\n");
@@ -117,7 +118,7 @@ void TestMIIO::slot_getInfoMIIO_success(InfoMIIO infoMIIO)
 * Output         :  None
 * Return         :  None
 *******************************************************************************/
-void TestMIIO::slot_getInfoMIIO_failed(QString replyData)
+void TestMIIO::slot_getInfoMIIO_failed(QString requestData, QString replyData)
 {
     debugInfo.append("GET MIIO INFO FAILED!!!\n");
     debugInfo.append(QString("SERVER REPLY: %1\n").arg(replyData));

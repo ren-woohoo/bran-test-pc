@@ -19,8 +19,8 @@ public:
     explicit ServerMIIO(QObject *parent = 0);
 
 signals:
-    void signal_fetch_success(InfoMIIO);
-    void signal_fetch_failed(QString);
+    void signal_fetch_success(QString, InfoMIIO);
+    void signal_fetch_failed(QString, QString);
 
 private slots:
     void slot_update_user(QString,QString);
@@ -33,7 +33,7 @@ private slots:
 private:
     QString session;
     QString name;
-
+    QString requestData;
 
 };
 

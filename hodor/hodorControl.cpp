@@ -199,6 +199,12 @@ bool HodorControl::refresh_device(QString deviceADB)
 
     deviceItem->set_device(deviceADB);
     infoDevice.deviceADB = deviceADB;
+
+    QString result0 = deviceItem->excute_cmd("cat /usr/bin/qtapp/etc/board_test_passed");
+    if(result0.toInt() != 1)
+    {
+        return false;
+    }
     QString result1 = deviceItem->excute_cmd("cat /usr/bin/qtapp/hodor_result.txt");
     QStringList resultList1;
     QString item;

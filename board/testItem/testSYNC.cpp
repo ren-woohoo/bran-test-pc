@@ -49,11 +49,28 @@ void TestSYNC::start_test(InfoTest infoTest)
 * Output         :  None
 * Return         :  None
 *******************************************************************************/
-void TestSYNC::slot_syncTest_success(QString replyData)
+void TestSYNC::slot_syncTest_success(QString requestData, QString replyData)
 {
-    debugInfo.append(QString("SERVER REPLY: %1").arg(replyData));
-    debugInfo.append("END SYNC TEST RESULT --- PASS!!!");
-    emit signal_test_result(0, debugInfo);
+    debugInfo.append(QString("REQ: %1\n").arg(requestData));
+    debugInfo.append(QString("ACK: %1\n").arg(replyData));
+    QString cmd1 = "echo 1 > /usr/bin/qtapp/etc/board_test_passed";
+    QString result1 = deviceItem->excute_cmd(cmd1);
+    debugInfo.append(QString("CMD1: %1\n").arg(cmd1));
+    debugInfo.append(QString("RESULT1: %1\n").arg(result1));
+    QString cmd2 = "cat /usr/bin/qtapp/etc/board_test_passed";
+    QString result2 = deviceItem->excute_cmd(cmd2);
+    debugInfo.append(QString("CMD2: %1\n").arg(cmd2));
+    debugInfo.append(QString("RESULT2: %1\n").arg(result2));
+    if(result2.toInt() == 1)
+    {
+        debugInfo.append("END SYNC TEST RESULT --- PASS!!!");
+        emit signal_test_result(0, debugInfo);
+    }
+    else
+    {
+        debugInfo.append("END SYNC TEST RESULT --- FAIL!!!");
+        emit signal_test_result(-1, debugInfo);
+    }
 }
 
 /*******************************************************************************
@@ -63,9 +80,10 @@ void TestSYNC::slot_syncTest_success(QString replyData)
 * Output         :  None
 * Return         :  None
 *******************************************************************************/
-void TestSYNC::slot_syncTest_failed(QString replyData)
+void TestSYNC::slot_syncTest_failed(QString requestData, QString replyData)
 {
-    debugInfo.append(QString("SERVER REPLY: %1").arg(replyData));
+    debugInfo.append(QString("REQ: %1\n").arg(requestData));
+    debugInfo.append(QString("ACK: %1\n").arg(replyData));
     debugInfo.append("END SYNC TEST RESULT --- FAIL!!!");
     emit signal_test_result(-1,debugInfo);
 }
