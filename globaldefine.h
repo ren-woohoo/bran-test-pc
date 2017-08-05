@@ -3,7 +3,7 @@
 
 #include <QString>
 
-#define     VERSION                 "20"
+#define     VERSION                 "21"
 
 #define     URL_SERVER                  "http://manufacture.cleargrass.com"
 #define     REQUEST_LOGIN               "/api/login"

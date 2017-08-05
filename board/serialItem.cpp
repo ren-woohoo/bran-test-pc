@@ -12,6 +12,7 @@ SerialItem::SerialItem(QObject *parent)
 {
     data_init();
     connect_init();
+    qDebug()<<package_cmd(GET_DEVICE);
 }
 
 /*******************************************************************************
@@ -234,35 +235,35 @@ void SerialItem::analyse_reply(QString replyData)
 }
 
 /*******************************************************************************
-* Function Name  :  open_port
+* Function Name  :  slot_open_port
 * Description    :  打开串口
 * Input          :  None
 * Output         :  None
 * Return         :  None
 *******************************************************************************/
-bool SerialItem::open_port(QString port)
+void SerialItem::slot_open_port(QString port)
 {
     this->port = port;
     this->setPortName(port);
     this->close();
     if(this->open(QIODevice::ReadWrite))
     {
-        return true;
+        emit signal_openPort_result(0);
     }
     else
     {
-        return false;
+        emit signal_openPort_result(-1);
     }
 }
 
 /*******************************************************************************
-* Function Name  :  close_port
+* Function Name  :  slot_close_port
 * Description    :  关闭串口
 * Input          :  None
 * Output         :  None
 * Return         :  None
 *******************************************************************************/
-void SerialItem::close_port()
+void SerialItem::slot_close_port()
 {
     this->close();
 }

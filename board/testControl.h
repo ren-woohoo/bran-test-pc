@@ -54,7 +54,10 @@ signals:
     void signal_test_end();
     void signal_test_init();
 
+    void signal_open_port(QString);
+    void signal_close_port();
     void signal_openPort_failed(QString);
+
     void signal_write_data(QString);
     void signal_update_infoFixture(InfoFixture);
     void signal_update_progress(int);
@@ -85,7 +88,8 @@ private slots:
     void slot_testMIIO_result(int,QString);
     void slot_testSYNC_result(int,QString);
 
-    void slot_close_ports();
+    void slot_openPort_result(int);
+    void slot_close_port();
 
 private:
     void data_init();

@@ -62,7 +62,6 @@ void WidgetControl::data_init()
 *******************************************************************************/
 void WidgetControl::connect_init()
 {
-
     connect(testItem1, SIGNAL(signal_test_end()), this, SLOT(slot_test_end()));
     connect(testItem2, SIGNAL(signal_test_end()), this, SLOT(slot_test_end()));
     connect(testItem3, SIGNAL(signal_test_end()), this, SLOT(slot_test_end()));
@@ -77,14 +76,33 @@ void WidgetControl::connect_init()
     connect(this, SIGNAL(signal_start_test()), testItem5, SLOT(slot_start_test()));
     connect(this, SIGNAL(signal_start_test()), testItem6, SLOT(slot_start_test()));
 
-    connect(this, SIGNAL(signal_close_ports()), testItem1, SLOT(slot_close_ports()), Qt::DirectConnection);
-    connect(this, SIGNAL(signal_close_ports()), testItem2, SLOT(slot_close_ports()), Qt::DirectConnection);
-    connect(this, SIGNAL(signal_close_ports()), testItem3, SLOT(slot_close_ports()), Qt::DirectConnection);
-    connect(this, SIGNAL(signal_close_ports()), testItem4, SLOT(slot_close_ports()), Qt::DirectConnection);
-    connect(this, SIGNAL(signal_close_ports()), testItem5, SLOT(slot_close_ports()), Qt::DirectConnection);
-    connect(this, SIGNAL(signal_close_ports()), testItem6, SLOT(slot_close_ports()), Qt::DirectConnection);
+    connect(this, SIGNAL(signal_close_ports()), testItem1, SLOT(slot_close_port()), Qt::DirectConnection);
+    connect(this, SIGNAL(signal_close_ports()), testItem2, SLOT(slot_close_port()), Qt::DirectConnection);
+    connect(this, SIGNAL(signal_close_ports()), testItem3, SLOT(slot_close_port()), Qt::DirectConnection);
+    connect(this, SIGNAL(signal_close_ports()), testItem4, SLOT(slot_close_port()), Qt::DirectConnection);
+    connect(this, SIGNAL(signal_close_ports()), testItem5, SLOT(slot_close_port()), Qt::DirectConnection);
+    connect(this, SIGNAL(signal_close_ports()), testItem6, SLOT(slot_close_port()), Qt::DirectConnection);
+
+    connect(testItem1, SIGNAL(signal_openPort_failed(QString)), this, SLOT(slot_openPort_failed(QString)));
+    connect(testItem2, SIGNAL(signal_openPort_failed(QString)), this, SLOT(slot_openPort_failed(QString)));
+    connect(testItem3, SIGNAL(signal_openPort_failed(QString)), this, SLOT(slot_openPort_failed(QString)));
+    connect(testItem4, SIGNAL(signal_openPort_failed(QString)), this, SLOT(slot_openPort_failed(QString)));
+    connect(testItem5, SIGNAL(signal_openPort_failed(QString)), this, SLOT(slot_openPort_failed(QString)));
+    connect(testItem6, SIGNAL(signal_openPort_failed(QString)), this, SLOT(slot_openPort_failed(QString)));
 
     connect(timerRefresh, SIGNAL(timeout()), this, SLOT(slot_refresh_cache()));
+}
+
+/*******************************************************************************
+* Function Name  :  slot_show_error
+* Description    :  显示错误信息
+* Input          :  None
+* Output         :  None
+* Return         :  None
+*******************************************************************************/
+void WidgetControl::slot_openPort_failed(QString port)
+{
+    QMessageBox::critical(this, tr("ERROR"), QString("串口%1,打开失败").arg(port), QMessageBox::Abort | QMessageBox::Ignore);
 }
 
 /*******************************************************************************
@@ -258,7 +276,6 @@ void WidgetControl::slot_delete_devices(QList<QString> listDevices)
 *******************************************************************************/
 void WidgetControl::slot_refresh_cache()
 {
-    qDebug()<<"RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR";
     if(!listPortsCache.isEmpty())
     {
         for(int i = 0; i < listTestItem.length(); ++i)

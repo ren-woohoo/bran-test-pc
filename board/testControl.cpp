@@ -40,7 +40,7 @@ void TestControl::data_init()
     serverSync = new ServerSync();
     serverMIIO = new ServerMIIO();
 
-    // serialItem->moveToThread(this);
+    serialItem->moveToThread(this);
     deviceItem->moveToThread(this);
     serverSync->moveToThread(this);
     serverMIIO->moveToThread(this);
@@ -79,7 +79,10 @@ void TestControl::connect_init()
     connect(serverUser, SIGNAL(signal_update_user(QString,QString)), serverMIIO, SLOT(slot_update_user(QString,QString)));
     connect(serverUser, SIGNAL(signal_update_user(QString,QString)), serverSync, SLOT(slot_update_user(QString,QString)));
 
+    connect(this, SIGNAL(signal_open_port(QString)), serialItem, SLOT(slot_open_port(QString)));
+    connect(this, SIGNAL(signal_close_port()), serialItem, SLOT(slot_close_port()));
     connect(this, SIGNAL(signal_write_data(QString)), serialItem, SLOT(slot_write_data(QString)));
+    connect(serialItem, SIGNAL(signal_openPort_result(int)), this, SLOT(slot_openPort_result(int)));
     connect(serialItem, SIGNAL(signal_getDevice_feedback(QString,QString)), this, SLOT(slot_getDevice_feedback(QString,QString)));
     connect(serialItem, SIGNAL(signal_getFixture_feedback(QString,QString)), this, SLOT(slot_getFixture_feedback(QString,QString)));
 
@@ -124,21 +127,39 @@ void TestControl::connect_init()
     connect(timerRetry, SIGNAL(timeout()), this, SLOT(slot_retry_samplingFixture()));
 }
 
+/*******************************************************************************
+* Function Name  :  load_port
+* Description    :  加载串口
+* Input          :  None
+* Output         :  None
+* Return         :  None
+*******************************************************************************/
 void TestControl::load_port(QString port)
 {
-    if(serialItem->open_port(port))
-    {
-        testStage = IS_PORT_READY;
-        infoTest.infoFixture.port = port;
-        emit signal_update_infoFixture(infoTest.infoFixture);
+    testStage = IS_PORT_READY;
+    infoTest.infoFixture.port = port;
+    emit signal_update_infoFixture(infoTest.infoFixture);
+    emit signal_open_port(port);
+}
 
+/*******************************************************************************
+* Function Name  :  slot_openPort_resut
+* Description    :  打开串口结果
+* Input          :  None
+* Output         :  None
+* Return         :  None
+*******************************************************************************/
+void TestControl::slot_openPort_result(int result)
+{
+    if(0 == result)
+    {
         cmd = serialItem->package_cmd(GET_FIXTURE);
         emit signal_write_data(cmd);
         timerRetry->start();
     }
     else
     {
-        emit signal_openPort_failed(port);
+        emit signal_openPort_failed(infoTest.infoFixture.port);
     }
 }
 
@@ -151,7 +172,6 @@ void TestControl::load_port(QString port)
 *******************************************************************************/
 void TestControl::load_fixture(QString id)
 {
-    qDebug()<<"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"<<id;
     testStage = IS_FIXTURE_READY;
     infoTest.infoFixture.id = id;
     emit signal_update_infoFixture(infoTest.infoFixture);
@@ -213,8 +233,7 @@ void TestControl::sampling_deviceSN()
 *******************************************************************************/
 void TestControl::remove_port()
 {
-    timerRetry->stop();
-    serialItem->close_port();
+    emit signal_close_port();
     testStage = IS_FREE;
     infoTest.clear();
     emit signal_update_infoFixture(infoTest.infoFixture);
@@ -253,9 +272,9 @@ void TestControl::remove_device()
 * Output         :  None
 * Return         :  None
 *******************************************************************************/
-void TestControl::slot_close_ports()
+void TestControl::slot_close_port()
 {
-    serialItem->close_port();
+    emit signal_close_port();
 }
 
 /*******************************************************************************

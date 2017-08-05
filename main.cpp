@@ -19,8 +19,8 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     WidgetMain w;
     w.show();
-    QString data = "43470d54653737420472033656e736f72054572726f720747";
-    data = QString(QByteArray::fromHex(data.toLatin1()));
-    qDebug()<<data;
+//    QString data = "43470d54653737420472033656e736f72054572726f720747";
+//    data = QString(QByteArray::fromHex(data.toLatin1()));
+//    qDebug()<<data;
     return a.exec();
 }

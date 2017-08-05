@@ -17,8 +17,6 @@ class SerialItem : public QSerialPort
 public:
     explicit SerialItem(QObject *parent = 0);
     QString package_cmd(CommandType, QString data = "");
-    bool open_port(QString);
-    void close_port();
 
 signals:
     void signal_usbA0B0_feedback(QString,QString);
@@ -33,7 +31,8 @@ signals:
     void signal_openPort_result(int);
 
 private slots:
-
+    void slot_open_port(QString);
+    void slot_close_port();
     void slot_recive_data();
     void slot_read_data();
     void slot_write_data(QString);

@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QTimer>
 #include "board/testControl.h"
+#include <QMessageBox>
 
 namespace Ui {
 class WidgetControl;
@@ -29,6 +30,8 @@ private slots:
     void slot_refresh_cache();
     void slot_test_end();
     void on_button_start_clicked();
+
+    void slot_openPort_failed(QString);
 
 private:
     void data_init();
