@@ -88,7 +88,7 @@ void DeviceControl::slot_update_devices()
     QStringList listDevice;
     QString sn;
     QProcess *process = new QProcess;
-    QString cmd = QString("adb devices");
+    QString cmd = QString("bin\\adb\\adb devices");
     process->start("cmd", QStringList()<<"/c"<<cmd);
     process->waitForStarted();
     process->waitForFinished();

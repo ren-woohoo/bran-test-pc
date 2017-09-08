@@ -221,6 +221,15 @@ color: rgb(85, 170, 255);
            </item>
            <item>
             <widget class="QLabel" name="label_adb">
+             <property name="font">
+              <font>
+               <family>.Helvetica Neue DeskInterface</family>
+               <pointsize>15</pointsize>
+               <weight>50</weight>
+               <italic>false</italic>
+               <bold>false</bold>
+              </font>
+             </property>
              <property name="styleSheet">
               <string notr="true">font: 15pt &quot;.Helvetica Neue DeskInterface&quot;;</string>
              </property>

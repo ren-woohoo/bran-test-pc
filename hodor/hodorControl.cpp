@@ -199,13 +199,21 @@ bool HodorControl::refresh_device(QString deviceADB)
 
     deviceItem->set_device(deviceADB);
     infoDevice.deviceADB = deviceADB;
-
-    QString result0 = deviceItem->excute_cmd("cat /usr/bin/qtapp/etc/board_test_passed");
-    if(result0.toInt() != 1)
+    debugFile = "";
+    debugFile.append(QString("deviceADB:%1\n").arg(deviceADB));
+    QString cmd0 = "cat /usr/bin/qtapp/etc/board_passed.txt";
+    QString result0 = deviceItem->adb_shell(cmd0);
+    debugFile.append(QString("CMD0:%1\n").arg(cmd0));
+    debugFile.append(QString("RESULT0:%1\n").arg(result0));
+    if((result0.toInt() != 1) && !result0.isEmpty())
     {
+        emit signal_update_debugInfo(debugFile);
         return false;
     }
-    QString result1 = deviceItem->excute_cmd("cat /usr/bin/qtapp/hodor_result.txt");
+    QString cmd1 = "cat /usr/bin/qtapp/etc/hodor_result.txt";
+    QString result1 = deviceItem->adb_shell(cmd1);
+    debugFile.append(QString("CMD1:%1\n").arg(cmd1));
+    debugFile.append(QString("RESULT1:%1\n").arg(result1));
     QStringList resultList1;
     QString item;
     QString result;
@@ -214,6 +222,7 @@ bool HodorControl::refresh_device(QString deviceADB)
         resultList1 = (result1.trimmed()).split("\n");
         if(resultList1.length() < 9)
         {
+            emit signal_update_debugInfo(debugFile);
             return false;
         }
         for(int i = 0; i < resultList1.length(); ++i)
@@ -298,14 +307,18 @@ bool HodorControl::refresh_device(QString deviceADB)
     }
     else
     {
+        emit signal_update_debugInfo(debugFile);
         return false;
     }
-
-    QString result2 = deviceItem->excute_cmd("cat /usr/bin/qtapp/etc/device.conf");
+    QString cmd2 = "cat /usr/bin/qtapp/etc/device.conf";
+    QString result2 = deviceItem->adb_shell("cat /usr/bin/qtapp/etc/device.conf");
+    debugFile.append(QString("CMD2:%1\n").arg(cmd2));
+    debugFile.append(QString("RESULT2:%1\n").arg(result2));
     QStringList resultList2 = result2.split("\n");
-    QString row;
+    QString row,model;
     if(resultList2.length() < 4)
     {
+        emit signal_update_debugInfo(debugFile);
         return false;
     }
     for(int i = 0; i < resultList2.length(); ++i)
@@ -324,12 +337,20 @@ bool HodorControl::refresh_device(QString deviceADB)
         {
             infoDevice.infoMiio.key = row.split("=").at(1);
         }
+        else if(row.contains("model="))
+        {
+            model = row.split("=").at(1);
+        }
     }
-    if(infoDevice.infoMiio.isEmpty())
+    if(infoDevice.infoMiio.isEmpty() || (model != "cgllc.airmonitor.b1"))
     {
+        emit signal_update_debugInfo(debugFile);
         return false;
     }
-    QString result3 = deviceItem->excute_cmd("cat /proc/cpuinfo");
+    QString cmd3 = "cat /proc/cpuinfo";
+    QString result3 = deviceItem->adb_shell(cmd3);
+    debugFile.append(QString("CMD3:%1\n").arg(cmd3));
+    debugFile.append(QString("RESULT3:%1\n").arg(result3));
     QStringList resultList3 = result3.split("\n");
     for(int i = 0; i < resultList3.length(); ++i)
     {
@@ -343,13 +364,17 @@ bool HodorControl::refresh_device(QString deviceADB)
             }
         }
     }
+    debugFile.append(QString("deviceSN:%1;deviceADB:%2\n").arg(infoDevice.deviceSN).arg(infoDevice.deviceADB));
     if(!infoDevice.isEmpty() && (infoDevice.deviceSN.contains(infoDevice.deviceADB.mid(8,7))))
     {
         emit signal_update_device(infoDevice, infoHodor);
     }
     else
     {
-        return true;
+        emit signal_update_debugInfo(debugFile);
+        return false;
     }
+    emit signal_update_debugInfo(debugFile);
+    return true;
 }
 

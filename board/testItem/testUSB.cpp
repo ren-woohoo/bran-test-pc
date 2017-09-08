@@ -193,7 +193,7 @@ void TestUSB::slot_usbA1B0_feedback(QString replyData,QString data)
 bool TestUSB::update_ac(bool &ac)
 {
     QString cmd = "cat /sys/class/power_supply/ac/present";
-    QString result = deviceItem->excute_cmd(cmd);
+    QString result = deviceItem->adb_shell(cmd);
     result = result.trimmed();
     debugInfo.append(QString("CMD: %1\n").arg(cmd));
     debugInfo.append(QString("RESULT: %1\n").arg(result));
@@ -225,7 +225,7 @@ bool TestUSB::update_ac(bool &ac)
 bool TestUSB::update_usb(bool &usb)
 {
     QString cmd = "cat /sys/class/power_supply/usb/present";
-    QString result = deviceItem->excute_cmd(cmd);
+    QString result = deviceItem->adb_shell(cmd);
     result = result.trimmed();
     debugInfo.append(QString("CMD: %1\n").arg(cmd));
     debugInfo.append(QString("RESULT: %1\n").arg(result));

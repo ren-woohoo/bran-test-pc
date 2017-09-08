@@ -84,6 +84,7 @@ void WidgetHodor::connect_init()
     connect(hodorControl, SIGNAL(signal_remove_device()), this, SLOT(slot_remove_device()));
     connect(hodorControl, SIGNAL(signal_syncTest_success(QString, QString)), this, SLOT(slot_syncTest_success(QString, QString)));
     connect(hodorControl, SIGNAL(signal_syncTest_failed(QString, QString)), this, SLOT(slot_syncTest_failed(QString, QString)));
+    connect(hodorControl, SIGNAL(signal_update_debugInfo(QString)), this, SLOT(slot_update_debugInfo(QString)));
 }
 
 /*******************************************************************************
@@ -238,4 +239,9 @@ void WidgetHodor::slot_syncTest_failed(QString request, QString reply)
     ui->edit_ack->setText(reply);
     ui->stackedWidget_result->setCurrentWidget(ui->page_failed);
     ui->button_sync->setEnabled(true);
+}
+
+void WidgetHodor::slot_update_debugInfo(QString debug)
+{
+    ui->edit_req->setText(debug);
 }

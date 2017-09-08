@@ -119,7 +119,7 @@ background-color: rgb(33, 33, 33);
           <string/>
          </property>
          <property name="pixmap">
-          <pixmap resource="resource/resource.qrc">:/images/logo/logoLarge.png</pixmap>
+          <pixmap resource="../resource/resource.qrc">:/images/logo/logoLarge.png</pixmap>
          </property>
         </widget>
        </item>
@@ -595,6 +595,9 @@ border-image: url(:/images/button/button1_press.png);
        <height>688</height>
       </size>
      </property>
+     <property name="focusPolicy">
+      <enum>Qt::NoFocus</enum>
+     </property>
      <property name="styleSheet">
       <string notr="true">QTabWidget::pane{
 	border:none;
@@ -829,7 +832,7 @@ border:0px;</string>
              <string/>
             </property>
             <property name="pixmap">
-             <pixmap resource="resource/resource.qrc">:/images/logo/logoSmall.png</pixmap>
+             <pixmap resource="../resource/resource.qrc">:/images/logo/logoSmall.png</pixmap>
             </property>
            </widget>
           </item>
@@ -1034,7 +1037,7 @@ border-image: url(:/images/button/button2_press.png);
           <string/>
          </property>
          <property name="pixmap">
-          <pixmap resource="resource/resource.qrc">:/images/logo/logoLarge.png</pixmap>
+          <pixmap resource="../resource/resource.qrc">:/images/logo/logoLarge.png</pixmap>
          </property>
         </widget>
        </item>
@@ -1542,7 +1545,7 @@ border-image: url(:/images/button/button1_press.png);
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>
-  <include location="resource/resource.qrc"/>
+  <include location="../resource/resource.qrc"/>
  </resources>
  <connections/>
 </ui>

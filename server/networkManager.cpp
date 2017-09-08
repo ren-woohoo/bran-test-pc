@@ -3,7 +3,7 @@
 NetworkManager::NetworkManager()
     :QNetworkAccessManager()
 {
-    durationRequest = 2000;
+    durationRequest = 6000;
 }
 
 /*******************************************************************************
@@ -23,7 +23,7 @@ void NetworkManager::get_request(QNetworkRequest request)
     QString replyData;
     QNetworkReply *reply;
     QByteArray data;
-    int num = 3;
+    int num = 1;
 
     connect(timer,SIGNAL(timeout()), &loop, SLOT(quit()));
     while(num -- > 0)
@@ -90,6 +90,7 @@ void NetworkManager::post_request(QNetworkRequest request, QByteArray postData)
     connect(timer,SIGNAL(timeout()), &loop, SLOT(quit()));
     while(num-- > 0)
     {
+        qDebug()<<"########################################";
         reply = this->post(request,postData);
         connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
         timer->start();
@@ -112,10 +113,10 @@ void NetworkManager::post_request(QNetworkRequest request, QByteArray postData)
             {
                 QVariant variant = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
                 int nStatusCode = variant.toInt();
-
+                data = reply->readAll();
+                qDebug()<<nStatusCode<<data;
                 if(nStatusCode == 200)
                 {
-                    data = reply->readAll();
                     replyData.prepend(data);
                     qDebug()<<replyData;
 

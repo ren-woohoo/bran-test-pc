@@ -18,6 +18,8 @@ public:
     explicit DeviceItem(QObject *parent = 0);
     void set_device(QString);
 
+    QString adb_shell(QString);
+    void adb_push(QString);
     QString excute_cmd(QString);
 
 signals:

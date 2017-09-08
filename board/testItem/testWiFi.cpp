@@ -23,8 +23,10 @@ TestWiFi::TestWiFi(DeviceItem *deviceItem, SerialItem *serialItem)
 void TestWiFi::start_test()
 {
     debugInfo = "START TEST WI-FI ...\n";
-    QString cmd1 = "ps | grep wpa_supplicant | grep -v grep | wc -l";
+    QString cmd1 = "\"ps | grep wpa_supplicant | grep -v grep | wc -l\"";
     QString result1 = deviceItem->excute_cmd(cmd1);
+    result1 = result1.split("\n").at(0);
+    result1 = result1.trimmed();
     debugInfo.append(QString("CMD1: %1\n").arg(cmd1));
     debugInfo.append(QString("RESULT1: %1\n").arg(result1));
     if(!result1.isEmpty() && "0" == result1)
@@ -43,9 +45,8 @@ void TestWiFi::start_test()
         debugInfo.append(QString("CMD4: %1\n").arg(cmd4));
         debugInfo.append(QString("RESULT4: %1\n").arg(result4));
     }
-
     QString cmd5 = "wpa_cli -i wlan0 scan";
-    QString result5 = deviceItem->excute_cmd(cmd5);
+    QString result5 = deviceItem->adb_shell(cmd5);
     debugInfo.append(QString("CMD5: %1\n").arg(cmd5));
     debugInfo.append(QString("RESULT5: %1\n").arg(result5));
 
@@ -55,7 +56,7 @@ void TestWiFi::start_test()
     loop.exec();
 
     QString cmd6 = "wpa_cli -i wlan0 scan_result";
-    QString result6 = deviceItem->excute_cmd(cmd6);
+    QString result6 = deviceItem->adb_shell(cmd6);
     debugInfo.append(QString("CMD6: %1\n").arg(cmd6));
     debugInfo.append(QString("RESULT6: %1\n").arg(result6));
 
@@ -85,15 +86,15 @@ void TestWiFi::start_test()
 
 //    QString cmd1 = QString("push %1").arg(WIFI_COMMAND1);
 //    debugInfo.append(QString("CMD1: %1\n").arg(cmd1));
-//    QString result1 = deviceItem->excute_cmd(cmd1);
+//    QString result1 = deviceItem->adb_shell(cmd1);
 //    debugInfo.append(QString("RESULT1: %1\n").arg(result1));
 //    QString cmd2 = QString("shell %1").arg(WIFI_COMMAND2);
 //    debugInfo.append(QString("CMD2: %1\n").arg(cmd2));
-//    QString result2 = deviceItem->excute_cmd(cmd2);
+//    QString result2 = deviceItem->adb_shell(cmd2);
 //    debugInfo.append(QString("RESULT2: %1\n").arg(result2));
 //    QString cmd3 = QString("shell %1").arg(WIFI_COMMAND3);
 //    debugInfo.append(QString("CMD3: %1\n").arg(cmd3));
-//    QString result3 = deviceItem->excute_cmd(cmd3);
+//    QString result3 = deviceItem->adb_shell(cmd3);
 //    debugInfo.append(QString("RESULT3: %1\n").arg(result3));
 
 //    // 做出2S延迟
@@ -103,7 +104,7 @@ void TestWiFi::start_test()
 
 //    QString cmd4 = QString("shell %1").arg(WIFI_COMMAND4);
 //    debugInfo.append(QString("CMD4: %1\n").arg(cmd4));
-//    QString result4 = deviceItem->excute_cmd(cmd4);
+//    QString result4 = deviceItem->adb_shell(cmd4);
 //    qDebug()<<result1<<result2<<result3<<result4;
 //    QStringList strList = result4.trimmed().split("\n");
 //    if(strList.length() <= 1)

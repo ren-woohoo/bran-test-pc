@@ -205,6 +205,8 @@ void TestControl::load_deviceADB(QString adb)
     testStage = IS_MATCHED;
     infoTest.infoFixture.deviceADB = adb;
     deviceItem->set_device(infoTest.infoFixture.deviceADB);
+    testCPU->set_deviceADB(infoTest.infoFixture.deviceADB);
+    testSYNC->set_device(infoTest.infoFixture.deviceADB);
     emit signal_update_infoFixture(infoTest.infoFixture);
 }
 
@@ -263,6 +265,7 @@ void TestControl::remove_device()
     {
         testStage = IS_FIXTURE_READY;
     }
+    emit signal_update_infoFixture(infoTest.infoFixture);
 }
 
 /*******************************************************************************
@@ -306,14 +309,14 @@ void TestControl::slot_retry_samplingFixture()
 *******************************************************************************/
 void TestControl::slot_getFixture_feedback(QString replyData, QString data)
 {
-    QString result = QString(QByteArray::fromHex(data.toLatin1()));
+    data = QString(QByteArray::fromHex(data.toLatin1()));;
     QString id;
     QByteArray ba;
-
-    if("Fail" != result)
+    if("Fail" != data)
     {
         ba = QCryptographicHash::hash (data.toLatin1(), QCryptographicHash::Md5);
         id.append(ba.toHex());
+        qDebug()<<"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"<<data<<id;
         timerRetry->stop();
         load_fixture(id);
     }
@@ -367,18 +370,22 @@ void TestControl::slot_start_test()
 *******************************************************************************/
 void TestControl::slot_testCPU_result(int result,QString debugInfo)
 {
-    progress += 10;
-    emit signal_testCPU_result(result,debugInfo);
-    emit signal_update_progress(progress);
-    qDebug()<<"RTC START TEST";
-    testRTC->start_test();
-    if(result != 0)
+    if(IS_TESTING == testStage)
     {
-        infoTest.infoResult.cpu = false;
-    }
-    else
-    {
-        infoTest.infoResult.cpu = true;
+        progress += 10;
+        emit signal_testCPU_result(result,debugInfo);
+        emit signal_update_progress(progress);
+        qDebug()<<"RTC START TEST";
+        this->sleep(1);
+        testRTC->start_test();
+        if(result != 0)
+        {
+            infoTest.infoResult.cpu = false;
+        }
+        else
+        {
+            infoTest.infoResult.cpu = true;
+        }
     }
 }
 
@@ -391,18 +398,22 @@ void TestControl::slot_testCPU_result(int result,QString debugInfo)
 *******************************************************************************/
 void TestControl::slot_testRTC_result(int result,QString debugInfo)
 {
-    progress += 10;
-    emit signal_testRTC_result(result,debugInfo);
-    emit signal_update_progress(progress);
-    qDebug()<<"G-SENSOR START TEST";
-    testGravity->start_test();
-    if(result != 0)
+    if(IS_TESTING == testStage)
     {
-        infoTest.infoResult.rtc = false;
-    }
-    else
-    {
-        infoTest.infoResult.rtc = true;
+        progress += 10;
+        emit signal_testRTC_result(result,debugInfo);
+        emit signal_update_progress(progress);
+        qDebug()<<"G-SENSOR START TEST";
+        this->sleep(1);
+        testGravity->start_test();
+        if(result != 0)
+        {
+            infoTest.infoResult.rtc = false;
+        }
+        else
+        {
+            infoTest.infoResult.rtc = true;
+        }
     }
 }
 
@@ -415,18 +426,22 @@ void TestControl::slot_testRTC_result(int result,QString debugInfo)
 *******************************************************************************/
 void TestControl::slot_testGravity_result(int result,QString debugInfo)
 {
-    progress += 10;
-    emit signal_testGravity_result(result, debugInfo);
-    emit signal_update_progress(progress);
-    qDebug()<<"WIFI START TEST";
-    testWiFi->start_test();
-    if(result != 0)
+    if(IS_TESTING == testStage)
     {
-        infoTest.infoResult.gravity = false;
-    }
-    else
-    {
-        infoTest.infoResult.gravity = true;
+        progress += 10;
+        emit signal_testGravity_result(result, debugInfo);
+        emit signal_update_progress(progress);
+        qDebug()<<"WIFI START TEST";
+        this->sleep(1);
+        testWiFi->start_test();
+        if(result != 0)
+        {
+            infoTest.infoResult.gravity = false;
+        }
+        else
+        {
+            infoTest.infoResult.gravity = true;
+        }
     }
 }
 
@@ -439,18 +454,22 @@ void TestControl::slot_testGravity_result(int result,QString debugInfo)
 *******************************************************************************/
 void TestControl::slot_testWiFi_result(int result,QString debugInfo)
 {
-    progress += 10;
-    emit signal_testWiFi_result(result, debugInfo);
-    emit signal_update_progress(progress);
-    qDebug()<<"USB_VBUS START TEST";
-    testUSB->start_test();
-    if(result != 0)
+    if(IS_TESTING == testStage)
     {
-        infoTest.infoResult.wifi = false;
-    }
-    else
-    {
-        infoTest.infoResult.wifi = true;
+        this->sleep(2);
+        progress += 10;
+        emit signal_testWiFi_result(result, debugInfo);
+        emit signal_update_progress(progress);
+        qDebug()<<"USB_VBUS START TEST";
+        testUSB->start_test();
+        if(result != 0)
+        {
+            infoTest.infoResult.wifi = false;
+        }
+        else
+        {
+            infoTest.infoResult.wifi = true;
+        }
     }
 }
 
@@ -463,18 +482,21 @@ void TestControl::slot_testWiFi_result(int result,QString debugInfo)
 *******************************************************************************/
 void TestControl::slot_testUSB_result(int result,QString debugInfo)
 {
-    progress += 15;
-    emit signal_testUSB_result(result, debugInfo);
-    emit signal_update_progress(progress);
-    qDebug()<<"VOL START TEST";
-    testVOL->start_test();
-    if(result != 0)
+    if(IS_TESTING == testStage)
     {
-        infoTest.infoResult.usb = false;
-    }
-    else
-    {
-        infoTest.infoResult.usb = true;
+        progress += 15;
+        emit signal_testUSB_result(result, debugInfo);
+        emit signal_update_progress(progress);
+        qDebug()<<"VOL START TEST";
+        testVOL->start_test();
+        if(result != 0)
+        {
+            infoTest.infoResult.usb = false;
+        }
+        else
+        {
+            infoTest.infoResult.usb = true;
+        }
     }
 }
 
@@ -487,24 +509,27 @@ void TestControl::slot_testUSB_result(int result,QString debugInfo)
 *******************************************************************************/
 void TestControl::slot_testVOL_result(int result,QString debugInfo)
 {
-    progress += 15;
-    emit signal_testVOL_result(result, debugInfo);
-    emit signal_update_progress(progress);
-    if(result != 0)
+    if(IS_TESTING == testStage)
     {
-        infoTest.infoResult.vol = false;
-    }
-    else
-    {
-        infoTest.infoResult.vol = true;
-    }
-    if(infoTest.infoResult.vol && infoTest.infoResult.usb && infoTest.infoResult.rtc && infoTest.infoResult.gravity && infoTest.infoResult.cpu)
-    {
-        testMIIO->start_test();
-    }
-    else
-    {
-        testSYNC->start_test(infoTest);
+        progress += 15;
+        emit signal_testVOL_result(result, debugInfo);
+        emit signal_update_progress(progress);
+        if(result != 0)
+        {
+            infoTest.infoResult.vol = false;
+        }
+        else
+        {
+            infoTest.infoResult.vol = true;
+        }
+        if(infoTest.infoResult.vol && infoTest.infoResult.usb && infoTest.infoResult.rtc && infoTest.infoResult.gravity && infoTest.infoResult.cpu && infoTest.infoResult.wifi)
+        {
+            testMIIO->start_test();
+        }
+        else
+        {
+            testSYNC->start_test(infoTest);
+        }
     }
 }
 
@@ -517,18 +542,21 @@ void TestControl::slot_testVOL_result(int result,QString debugInfo)
 *******************************************************************************/
 void TestControl::slot_testMIIO_result(int result,QString debugInfo)
 {
-    progress += 20;
-    emit signal_testMIIO_result(result, debugInfo);
-    emit signal_update_progress(progress);
-    if(result != 0)
+    if(IS_TESTING == testStage)
     {
-        infoTest.infoResult.miio = false;
+        progress += 20;
+        emit signal_testMIIO_result(result, debugInfo);
+        emit signal_update_progress(progress);
+        if(result != 0)
+        {
+            infoTest.infoResult.miio = false;
+        }
+        else
+        {
+            infoTest.infoResult.miio = true;
+        }
+        testSYNC->start_test(infoTest);
     }
-    else
-    {
-        infoTest.infoResult.miio = true;
-    }
-    testSYNC->start_test(infoTest);
 }
 
 /*******************************************************************************
@@ -540,21 +568,24 @@ void TestControl::slot_testMIIO_result(int result,QString debugInfo)
 *******************************************************************************/
 void TestControl::slot_testSYNC_result(int result, QString debugInfo)
 {
-    progress += 10;
-    emit signal_testSYNC_result(result, debugInfo);
-    emit signal_update_progress(progress);
-    emit signal_test_end();
-    if((0 == result) && infoTest.infoResult.isPassed())
-    {
-        emit signal_test_result(0);
-    }
-    else
-    {
-        emit signal_test_result(-1);
-    }
     if(IS_TESTING == testStage)
     {
-        testStage = IS_MATCHED;
+        progress += 10;
+        emit signal_testSYNC_result(result, debugInfo);
+        emit signal_update_progress(progress);
+        emit signal_test_end();
+        if((0 == result) && infoTest.infoResult.isPassed())
+        {
+            emit signal_test_result(0);
+        }
+        else
+        {
+            emit signal_test_result(-1);
+        }
+        if(IS_TESTING == testStage)
+        {
+            testStage = IS_MATCHED;
+        }
     }
 }
 

@@ -24,7 +24,7 @@ void TestRTC::start_test()
 {
     debugInfo = "START TEST RTC ...\n";
     QString cmd = "hwclock";
-    QString result = deviceItem->excute_cmd(cmd);
+    QString result = deviceItem->adb_shell(cmd);
     debugInfo.append(QString("CMD: %1\n").arg(cmd));
     debugInfo.append(QString("RESULT: %1\n").arg(result));
     if(result.contains("seconds"))

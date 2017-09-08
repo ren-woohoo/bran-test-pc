@@ -34,6 +34,7 @@ signals:
     void signal_sync_testFailed(InfoDevice, InfoHodor);
     void signal_syncTest_success(QString, QString);
     void signal_syncTest_failed(QString, QString);
+    void signal_update_debugInfo(QString);
 
 private slots:
     void slot_add_devices(QList<QString>);
@@ -47,7 +48,6 @@ private:
     void connect_init();
     bool refresh_device(QString);
 
-
 private:
     DeviceItem *deviceItem;
     ServerHodor *serverHodor;
@@ -59,6 +59,8 @@ private:
     bool isFree;
 
     QTimer *timer;
+
+    QString debugFile;
 
 private:
     static HodorControl *instance;

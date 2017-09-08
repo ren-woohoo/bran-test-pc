@@ -25,7 +25,9 @@ void TestCPU::start_test()
     debugInfo = "START TEST CPU ...\n";
     QString sn;
     QString cmd = " cat /proc/cpuinfo";
-    QString result = deviceItem->excute_cmd(cmd);
+    qDebug()<<"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$";
+    QString result = deviceItem->adb_shell(cmd);
+    qDebug()<<"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
     debugInfo.append(QString("CMD: %1\n").arg(cmd));
     debugInfo.append(QString("RESULT: %1\n").arg(result));
     QStringList resultList = result.split("\n");
@@ -43,7 +45,8 @@ void TestCPU::start_test()
             }
         }
     }
-    debugInfo.append(QString("SN:%1\n, deviceSN:%2\n, deviceADB:%3\n").arg(sn).arg(deviceSN).arg(deviceADB));
+
+    debugInfo.append(QString("SN:%1\ndeviceSN:%2\ndeviceADB:%3\n").arg(sn).arg(deviceSN).arg(deviceADB));
 
     if((sn == deviceSN) && (sn.contains(deviceADB.mid(8,7))))
     {

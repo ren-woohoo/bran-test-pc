@@ -25,6 +25,14 @@ WidgetControl::~WidgetControl()
 *******************************************************************************/
 void WidgetControl::data_init()
 {
+    QFile file("./board_passed.txt");
+    if(!file.exists() && file.open(QIODevice::ReadWrite))
+    {
+        QTextStream in(&file);
+        in<<"1";
+        file.close();
+    }
+
     testItem1 = new TestControl(ui->widget_1);
     testItem2 = new TestControl(ui->widget_2);
     testItem3 = new TestControl(ui->widget_3);
@@ -237,6 +245,7 @@ void WidgetControl::slot_delete_devices(QList<QString> listDevices)
         {
             for(int j = 0; j < listDevices.length();)
             {
+                qDebug()<<"##################################";
                 if(listTestItem.at(i)->get_device() == listDevices.at(j))
                 {
                     // 移除设备

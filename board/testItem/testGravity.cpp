@@ -24,7 +24,7 @@ void TestGravity::start_test()
 {
     debugInfo = "START TEST G-SENSOR ...\n";
     QString cmd = QString("cat %1").arg(DEVICE_GRAVITY);
-    QString result = deviceItem->excute_cmd(cmd);
+    QString result = deviceItem->adb_shell(cmd);
     debugInfo.append(QString("CMD: %1\n").arg(cmd));
     debugInfo.append(QString("RESULT: %1\n").arg(result));
     QStringList listResult = result.split(";");

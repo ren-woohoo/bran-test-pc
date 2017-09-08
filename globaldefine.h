@@ -3,7 +3,7 @@
 
 #include <QString>
 
-#define     VERSION                 "21"
+#define     VERSION                 "29"
 
 #define     URL_SERVER                  "http://manufacture.cleargrass.com"
 #define     REQUEST_LOGIN               "/api/login"
@@ -154,11 +154,11 @@ typedef struct infoFixture
     }
     bool isReady()
     {
-        if(deviceADB.isEmpty())
+        if(!port.isEmpty() && !id.isEmpty() && !deviceSN.isEmpty() && !deviceADB.isEmpty())
         {
-            return false;
+            return true;
         }
-        return true;
+        return false;
     }
 }InfoFixture;
 

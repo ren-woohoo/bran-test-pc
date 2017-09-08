@@ -12,7 +12,7 @@ SerialItem::SerialItem(QObject *parent)
 {
     data_init();
     connect_init();
-    qDebug()<<package_cmd(GET_DEVICE);
+//    qDebug()<<package_cmd(GET_DEVICE);
 }
 
 /*******************************************************************************
@@ -29,7 +29,6 @@ void SerialItem::data_init()
     this->setParity(QSerialPort::NoParity);
     this->setStopBits(QSerialPort::OneStop);
     this->setFlowControl(QSerialPort::NoFlowControl);
-
 
     timerDelay = new QTimer(this);
     timerDelay->setSingleShot(true);
@@ -79,7 +78,6 @@ QString SerialItem::package_cmd(CommandType command, QString data)
     int sum = 0;
     int check1 = 0;
     int check2 = 0;
-    ba.append("CG");
     QString cmd;
     if(CHANGE_USB_A0B0 == command)
     {
@@ -109,12 +107,13 @@ QString SerialItem::package_cmd(CommandType command, QString data)
     {
         cmd = "Get Fixture";
     }
+    ba.append("CG");
     ba.append(cmd.length());
     ba.append(cmd);
     ba.append(ceil(data.length()/2));
     ba.append(QByteArray::fromHex(data.toLatin1()));
 
-    for(i= 0; i < ba.length(); ++i)
+    for(i = 0; i < ba.length(); ++i)
     {
         sum += ba.at(i)&0x000000FF ;
     }

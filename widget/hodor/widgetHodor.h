@@ -28,6 +28,8 @@ private slots:
     void slot_syncTest_success(QString,QString);
     void slot_syncTest_failed(QString,QString);
 
+    void slot_update_debugInfo(QString);
+
 private:
     void data_init();
     void connect_init();
