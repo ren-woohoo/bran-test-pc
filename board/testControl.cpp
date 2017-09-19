@@ -570,6 +570,11 @@ void TestControl::slot_testSYNC_result(int result, QString debugInfo)
 {
     if(IS_TESTING == testStage)
     {
+        this->sleep(1);
+        deviceItem->adb_shell("sync");
+        deviceItem->adb_shell("sync");
+        deviceItem->adb_shell("sync");
+        deviceItem->adb_shell("sync");
         progress += 10;
         emit signal_testSYNC_result(result, debugInfo);
         emit signal_update_progress(progress);
