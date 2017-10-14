@@ -20,6 +20,7 @@
 #include "testItem/testVOL.h"
 #include "testItem/testMIIO.h"
 #include "testItem/testSYNC.h"
+#include <QFile>
 
 enum TestStage{
 

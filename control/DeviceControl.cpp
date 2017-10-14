@@ -91,82 +91,87 @@ void DeviceControl::slot_update_devices()
     QString cmd = QString("bin\\adb\\adb devices");
     process->start("cmd", QStringList()<<"/c"<<cmd);
     process->waitForStarted();
-    process->waitForFinished();
-    QString result = QString::fromLocal8Bit(process->readAllStandardOutput());
-    if(process)
+    if(process->waitForFinished())
     {
-        process->close();
-        delete process;
-        process = 0;
-    }
-    QStringList strList = result.split("\r\n");
-    strList.pop_front();
-    for(int i = 0; i < strList.length(); ++i)
-    {
-        strDevice = strList.at(i);
-        listDevice = strDevice.split("\t");
-        sn = listDevice.at(0);
-        if(!(sn.trimmed()).isEmpty())
+        QString result = QString::fromLocal8Bit(process->readAllStandardOutput());
+        if(process)
         {
-            listDevicesCurrent.append(sn);
+            process->close();
+            delete process;
+            process = 0;
         }
-    }
-    if(listDevices == listDevicesCurrent)
-    {
-        return;
-    }
-    else if(listDevices.isEmpty() && !listDevicesCurrent.isEmpty())
-    {
-        listDevicesAdd = listDevicesCurrent;
-    }
-    else if(!listDevices.isEmpty() && listDevicesCurrent.isEmpty())
-    {
-        listDevicesDelete = listDevices;
-    }
-    else
-    {
-        for(int i = 0; i < listDevicesCurrent.length(); ++i)
+        if(result.contains("List of devices attached"))
         {
-            for(int j = 0; j < listDevices.length(); ++j)
+            QStringList strList = result.split("\r\n");
+            strList.pop_front();
+            for(int i = 0; i < strList.length(); ++i)
             {
-                if(listDevicesCurrent.at(i) == listDevices.at(j))
+                strDevice = strList.at(i);
+                listDevice = strDevice.split("\t");
+                sn = listDevice.at(0);
+                if(!(sn.trimmed()).isEmpty())
                 {
-                    break;
-                }
-                if(j == (listDevices.length() - 1))
-                {
-                    // 假如需要更新的
-                    listDevicesAdd.append(listDevicesCurrent.at(i));
+                    listDevicesCurrent.append(sn);
                 }
             }
-        }
-        for(int m = 0; m < listDevices.length(); ++m)
-        {
-            for(int n = 0; n < listDevicesCurrent.length(); ++n)
+            if(listDevices == listDevicesCurrent)
             {
-                if(listDevicesCurrent.at(n) == listDevices.at(m))
+                return;
+            }
+            else if(listDevices.isEmpty() && !listDevicesCurrent.isEmpty())
+            {
+                listDevicesAdd = listDevicesCurrent;
+            }
+            else if(!listDevices.isEmpty() && listDevicesCurrent.isEmpty())
+            {
+                listDevicesDelete = listDevices;
+            }
+            else
+            {
+                for(int i = 0; i < listDevicesCurrent.length(); ++i)
                 {
-                    break;
+                    for(int j = 0; j < listDevices.length(); ++j)
+                    {
+                        if(listDevicesCurrent.at(i) == listDevices.at(j))
+                        {
+                            break;
+                        }
+                        if(j == (listDevices.length() - 1))
+                        {
+                            // 假如需要更新的
+                            listDevicesAdd.append(listDevicesCurrent.at(i));
+                        }
+                    }
                 }
-                if(n == (listDevicesCurrent.length() - 1))
+                for(int m = 0; m < listDevices.length(); ++m)
                 {
-                    // 假如需要更新的
-                    listDevicesDelete.append(listDevices.at(m));
+                    for(int n = 0; n < listDevicesCurrent.length(); ++n)
+                    {
+                        if(listDevicesCurrent.at(n) == listDevices.at(m))
+                        {
+                            break;
+                        }
+                        if(n == (listDevicesCurrent.length() - 1))
+                        {
+                            // 假如需要更新的
+                            listDevicesDelete.append(listDevices.at(m));
+                        }
+                    }
                 }
             }
+
+            // 若有新的串口增加
+            if(!listDevicesAdd.isEmpty())
+            {
+                emit signal_add_devices(listDevicesAdd);
+            }
+
+            // 若有新的串口减少
+            if(!listDevicesDelete.isEmpty())
+            {
+                emit signal_delete_devices(listDevicesDelete);
+            }
+            listDevices = listDevicesCurrent;
         }
     }
-
-    // 若有新的串口增加
-    if(!listDevicesAdd.isEmpty())
-    {
-        emit signal_add_devices(listDevicesAdd);
-    }
-
-    // 若有新的串口减少
-    if(!listDevicesDelete.isEmpty())
-    {
-        emit signal_delete_devices(listDevicesDelete);
-    }
-    listDevices = listDevicesCurrent;
 }

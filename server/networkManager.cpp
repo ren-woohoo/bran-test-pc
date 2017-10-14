@@ -3,7 +3,7 @@
 NetworkManager::NetworkManager()
     :QNetworkAccessManager()
 {
-    durationRequest = 6000;
+    durationRequest = 10000;
 }
 
 /*******************************************************************************
@@ -86,7 +86,7 @@ void NetworkManager::post_request(QNetworkRequest request, QByteArray postData)
     QString replyData;
     QByteArray data;
     QNetworkReply *reply;
-    int num = 3;
+    int num = 1;
     connect(timer,SIGNAL(timeout()), &loop, SLOT(quit()));
     while(num-- > 0)
     {
