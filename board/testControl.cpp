@@ -375,9 +375,6 @@ void TestControl::slot_testCPU_result(int result,QString debugInfo)
         progress += 10;
         emit signal_testCPU_result(result,debugInfo);
         emit signal_update_progress(progress);
-        qDebug()<<"RTC START TEST";
-        this->sleep(1);
-        testRTC->start_test();
         if(result != 0)
         {
             infoTest.infoResult.cpu = false;
@@ -386,6 +383,8 @@ void TestControl::slot_testCPU_result(int result,QString debugInfo)
         {
             infoTest.infoResult.cpu = true;
         }
+        qDebug()<<"RTC START TEST";
+        testRTC->start_test();
     }
 }
 
@@ -403,9 +402,6 @@ void TestControl::slot_testRTC_result(int result,QString debugInfo)
         progress += 10;
         emit signal_testRTC_result(result,debugInfo);
         emit signal_update_progress(progress);
-        qDebug()<<"G-SENSOR START TEST";
-        this->sleep(1);
-        testGravity->start_test();
         if(result != 0)
         {
             infoTest.infoResult.rtc = false;
@@ -414,6 +410,8 @@ void TestControl::slot_testRTC_result(int result,QString debugInfo)
         {
             infoTest.infoResult.rtc = true;
         }
+        qDebug()<<"G-SENSOR START TEST";
+        testGravity->start_test();
     }
 }
 
@@ -431,9 +429,6 @@ void TestControl::slot_testGravity_result(int result,QString debugInfo)
         progress += 10;
         emit signal_testGravity_result(result, debugInfo);
         emit signal_update_progress(progress);
-        qDebug()<<"WIFI START TEST";
-        this->sleep(1);
-        testWiFi->start_test();
         if(result != 0)
         {
             infoTest.infoResult.gravity = false;
@@ -442,6 +437,8 @@ void TestControl::slot_testGravity_result(int result,QString debugInfo)
         {
             infoTest.infoResult.gravity = true;
         }
+        qDebug()<<"WIFI START TEST";
+        testWiFi->start_test();
     }
 }
 
@@ -456,12 +453,9 @@ void TestControl::slot_testWiFi_result(int result,QString debugInfo)
 {
     if(IS_TESTING == testStage)
     {
-        this->sleep(2);
         progress += 10;
         emit signal_testWiFi_result(result, debugInfo);
         emit signal_update_progress(progress);
-        qDebug()<<"USB_VBUS START TEST";
-        testUSB->start_test();
         if(result != 0)
         {
             infoTest.infoResult.wifi = false;
@@ -470,6 +464,8 @@ void TestControl::slot_testWiFi_result(int result,QString debugInfo)
         {
             infoTest.infoResult.wifi = true;
         }
+        qDebug()<<"USB_VBUS START TEST";
+        testUSB->start_test();
     }
 }
 
@@ -487,8 +483,6 @@ void TestControl::slot_testUSB_result(int result,QString debugInfo)
         progress += 15;
         emit signal_testUSB_result(result, debugInfo);
         emit signal_update_progress(progress);
-        qDebug()<<"VOL START TEST";
-        testVOL->start_test();
         if(result != 0)
         {
             infoTest.infoResult.usb = false;
@@ -497,6 +491,8 @@ void TestControl::slot_testUSB_result(int result,QString debugInfo)
         {
             infoTest.infoResult.usb = true;
         }
+        qDebug()<<"VOL START TEST";
+        testVOL->start_test();
     }
 }
 
@@ -570,7 +566,6 @@ void TestControl::slot_testSYNC_result(int result, QString debugInfo)
 {
     if(IS_TESTING == testStage)
     {
-        this->sleep(1);
         deviceItem->adb_shell("sync");
         deviceItem->adb_shell("sync");
         deviceItem->adb_shell("sync");

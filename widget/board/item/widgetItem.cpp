@@ -52,7 +52,7 @@ void WidgetTestItem::data_init()
 *******************************************************************************/
 void WidgetTestItem::connect_init()
 {
-    connect(timerProgress, SIGNAL(timeout()), this, SLOT(slot_refresh_progress()));
+//    connect(timerProgress, SIGNAL(timeout()), this, SLOT(slot_refresh_progress()));
 }
 
 /*******************************************************************************
@@ -78,7 +78,7 @@ void WidgetTestItem::slot_test_init()
 {
     progress = 0;
     ui->progressBar->setValue(0);
-    timerProgress->start();
+//    timerProgress->start();
     ui->button_more->setText("TEST...");
     ui->button_more->setStyleSheet("background-color:white;color:#424242");
 
@@ -116,8 +116,8 @@ void WidgetTestItem::slot_test_result(int result)
 *******************************************************************************/
 void WidgetTestItem::slot_update_progress(int progress)
 {
-    this->progress = progress;
-//    ui->progressBar->setValue(progress);
+//    this->progress = progress;
+    ui->progressBar->setValue(progress);
 }
 
 /*******************************************************************************

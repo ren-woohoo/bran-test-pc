@@ -3,15 +3,15 @@
 
 #include <QString>
 
-#define     VERSION                 "31"
+#define     VERSION                 "32"
 
 #define     URL_SERVER                  "http://manufacture.cleargrass.com"
 #define     REQUEST_LOGIN               "/api/login"
 #define     REQUEST_MODIFY              "/api/modify_user"
 #define     REQUEST_FETCH_MAC           "/api/bran/fetch_mac"
 #define     REQUEST_CHECK_FIRMWARE      "/api/bran/check_update"
-#define     REQUEST_SYNC_TEST_PASSED            "/api/bran/mac_written"
-#define     REQUEST_SYNC_TEST_FAILED            "/api/bran/board_test_failed"
+#define     REQUEST_SYNC_TEST_PASSED    "/api/bran/mac_written"
+#define     REQUEST_SYNC_TEST_FAILED    "/api/bran/board_test_failed"
 
 #define     REQUEST_HODOR_TEST_PASS     "/api/bran/test_pass"
 #define     REQUEST_HODOR_TEST_FAILED   "/api/bran/test_failed"

@@ -12,7 +12,11 @@ SerialItem::SerialItem(QObject *parent)
 {
     data_init();
     connect_init();
-//    qDebug()<<package_cmd(GET_DEVICE);
+//    qDebug()<<"A0B0"<<package_cmd(CHANGE_USB_A0B0);
+
+//    qDebug()<<"A0B1"<<package_cmd(CHANGE_USB_A0B1);
+//    qDebug()<<"A1B1"<<package_cmd(CHANGE_USB_A1B1);
+//    qDebug()<<"A1B0"<<package_cmd(CHANGE_USB_A1B0);
 }
 
 /*******************************************************************************
